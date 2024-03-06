@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch Chat Commands</title>
+    <!-- Cache-busting query parameter added to stylesheet -->
+    <link rel="stylesheet" type="text/css" href="styles.css?v=1">
+</head>
+
+<body>
+    <h1 class="ptz-heading">
+        Alveus PTZ Control
+        <a href="admin.html">
+            <img src="settings.png" alt="Admin Settings" class="admin-icon">
+        </a>
+    </h1>
+
+    <!-- Main container for direction-pad and preset-pad -->
+    <div class="container">
+        <div class="direction-and-ptz-container">
+            <!-- Container for cameras list -->
+            <h2 class="label">Camera</h2>
+            <div class="camera-container" id="cameraContainer">
+            </div>
+
+            <!-- Direction buttons -->
+            <div class="direction-pad">
+                <button class="arrow-button" onclick="sendDirectionCommand('upleft')">↖</button>
+                <button class="arrow-button" onclick="sendDirectionCommand('up')">▲</button>
+                <button class="arrow-button" onclick="sendDirectionCommand('upright')">↗</button>
+                <button class="arrow-button" onclick="sendDirectionCommand('left')">◀</button>
+                <button class="arrow-button" onclick="sendDirectionCommand('')"></button>
+                <button class="arrow-button" onclick="sendDirectionCommand('right')">▶</button>
+                <button class="arrow-button" onclick="sendDirectionCommand('downleft')">↙</button>
+                <button class="arrow-button" onclick="sendDirectionCommand('down')">▼</button>
+                <button class="arrow-button" onclick="sendDirectionCommand('downright')">↘</button>
+            </div>
+
+            <!-- PTZ input buttons -->
+            <div class="ptz-container">
+                <div class="ptz-input-wrapper">
+                    <input type="text" id="panInput" class="ptz-input" placeholder="Pan">
+                    <input type="text" id="tiltInput" class="ptz-input" placeholder="Tilt">
+                    <input type="text" id="zoomInput" class="ptz-input" placeholder="Zoom">
+                </div>
+                <button class="send-button" onclick="sendPanTiltZoom()">Send</button>
+            </div>
+
+            <!-- Swap buttons -->
+            <div class="swap-container">
+                <div class="swap-wrapper">
+                    <input type="text" id="swap1" class="swap-input" placeholder="Swap 1">
+                    <input type="text" id="swap2" class="swap-input" placeholder="Swap 2">
+                </div>
+                <button class="swap-button" onclick="sendSwapCommand()">Swap</button>
+            </div>
+
+            <!-- Focus buttons -->
+            <div class="focus-container">
+                <div class="focus-wrapper">
+                    <input type="text" id="focus" class="focus-input" placeholder="Focusr">
+                    <button class="autofocus-button" onclick="sendAutoFocusCommand()"></button>
+                </div>
+                <button class="focus-button" onclick="sendFocusCommand()">Focus</button>
+            </div>
+
+        </div>
+
+        <!-- Preset buttons -->
+        <div class="preset-container">
+            <h2 class="label-preset">Presets</h2>
+            <div class="preset-pad" id="presetPad">
+                <!-- These will be dynamically populated based on the selected camera -->
+            </div>
+<!--	   <div class="chat-box" id="chatBox">
+              <ul id="messages"></ul>
+           </div> -->
+        </div>
+
+      </div>
+    </div>
+
+    <form id="commandForm" action="/send-command" method="post">
+        <input type="hidden" id="commandInput" name="command">
+    </form>
+
+    <script>
+
+        function openAdminPage() {
+            window.location.href = "admin.html";
+        }
+    </script>
+
+    <!-- Cache-busting query parameter added to JavaScript file -->
+    <script src="script.js?v=1"></script>
+</body>
+</html>
+

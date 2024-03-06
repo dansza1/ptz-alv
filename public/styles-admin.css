@@ -1,0 +1,419 @@
+.ccontainer {
+    display: flex;
+    height: 100vh;
+}
+
+.camera-heading {
+    text-align: left;
+    margin-top: 0px;
+}
+.menu-item.active {
+    background-color: #007bff; /* Blue background color */
+    color: #fff; /* White text color */
+    /* Add any other styles you want to apply to the active state */
+}
+
+.camera-button.active {
+    background-color: #007bff; /* Blue background color */
+    color: #fff; /* White text color */
+    /* Add any other styles you want to apply to the active state */
+}
+
+.container {
+    display: flex;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+.direction-and-ptz-container {
+    display: flex;
+    flex-direction: column;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #444444; /* Dark background color */
+    color: #ffffff; /* White text color */
+    margin: 0;
+    padding: 0;
+}
+
+.settings-container {
+    float: right;
+    width: 300px; /* Adjust width as needed */
+    padding: 20px;
+    margin: 20px;
+    background-color: #f1f1f1;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Adjustments for smaller screens */
+@media (max-width: 768px) {
+    .settings-container {
+        float: none;
+        width: auto;
+        margin: 0;
+    }
+}
+
+
+.label {
+    color: #b2b2b2;
+    font-size: 15px; /* Adjust font size */
+    margin-left: 20px; /* Adjust spacing between label and camera-pad */
+    margin-bottom: 10px; /* Reduce the gap between the label and the camera-pad */
+    font-weight: lighter; /* Set font weight to normal */
+}
+
+.label-preset {
+    color: #b2b2b2;
+    font-size: 15px; /* Adjust font size */
+    display: block; /* Set the label as a block-level element */
+    position: relative;
+    margin-top: 14px; /* Reduce the gap between the label and the camera-pad */
+    font-weight: normal; /* Set font weight to normal */
+    margin-left: 10px; /* Adjust the margin-left value */
+    font-weight: lighter; /* Set font weight to normal */
+}
+
+.sidebar ul {
+    list-style-type: none; /* Remove bullet points from the list */
+    padding: 0; /* Remove default padding */
+    margin: 0; /* Remove default margin */
+}
+
+.menu-item {
+    display: block;
+    width: 132px;
+    height: 30px;
+    margin-top: 10px;
+    padding: 6px 18px;
+    border: none;
+    border-radius: 5px;
+    background-color: #636363;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 16px;
+    text-align: center;
+    text-decoration: none; /* Remove underline from links */
+    line-height: 30px; /* Vertically center text */
+    margin-left: 20px;
+}
+
+.menu-item:hover {
+    background-color: #1e88e5; /* Change background color on hover */
+}
+
+
+.admin-icon {
+    width: 20px; /* Adjust as needed */
+    height: 20px; /* Adjust as needed */
+    margin-left: 10px; /* Adjust as needed */
+    position: relative;
+    top: 3px;
+}
+
+.ptz-heading {
+    text-align: left;
+    margin-left: 20px;
+    font-size: 18px;
+    margin-bottom: -10px;
+}
+.main-content-box {
+    background-color: #222222; /* Dark grey background color */
+    color: #fff; /* White text color */
+    padding: 20px; /* Add padding for content */
+    border-radius: 5px; /* Rounded corners */
+    border: 1px solid #555; /* Darker border */
+}
+
+.camera-container {
+    display: flex;
+    flex-direction: column; /* Display buttons in a vertical list */
+    align-items: flex-start; /* Align buttons to the start of the container */
+    background-color: #222222; /* Set background color for the whole box */
+    padding: 0px;
+    border-radius: 0; /* Make corners square */
+    margin-right: 30px;
+    border: none; /* Remove border */
+    width: 170px; /* Set width of the container */
+    height: 290px; /* Set the height to 290px */
+    margin-left: 20px;
+    overflow-y: auto; /* Make the container scrollable vertically */
+}
+#currentCameraList .camera-button {
+    list-style-type: none; /* Remove bullets/dots */
+    padding-left: 5px; /* Adjust the value as needed */
+    padding-top: 5px; /* Adjust the value as needed */
+}
+
+.preset-container {
+    margin-left: -10px; /* Adjust padding as needed */
+    margin-top: -5px; /* Adjust padding as needed */
+}
+.camera-button {
+    width: 100%; /* Ensure buttons take full width of container */
+    height: 28px; /* Set a fixed height for buttons */
+    margin-top: 2px;
+    margin-bottom: 5px; /* Adjust spacing between buttons */
+    color: white; /* Text color */
+    background-color: #222222; /* Background color */
+    border: none; /* Remove button border */
+    cursor: pointer;
+    font-size: 16px;
+    text-align: left; /* Align text to the left */
+    flex-shrink: 0; /* Prevent the button from shrinking */
+}
+
+.camera-button:hover {
+    background-color: #606060; /* Darker background color on hover */
+}
+.camera-button.selected {
+    background-color: #6082B6; /* Example background color for selected button */
+    color: white; /* Example text color for selected button */
+}
+
+.container {
+    display: flex;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+/* Original CSS for preset buttons */
+.preset-button {
+    font-family: "Roboto Mono", monospace;
+    font-size: 16px;
+    margin: 0;
+    padding: 10px;
+    color: white;
+    background-color: #222222;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    box-sizing: border-box;
+    width: 100%; /* Make buttons take full width */
+    height: 50px; /* Set fixed height for buttons */
+}
+
+.preset-button:first-child {
+    margin-top: 0;
+}
+
+.preset-button:hover {
+    background-color: #606060; /* Add hover highlight effect */
+}
+
+
+.sublist li {
+    font-weight: normal; /* Make sublist items bold */
+    border-bottom: none !important; /* Remove border for sublist items */
+    padding-left: 0; /* Remove padding for sublist items */
+}
+
+/* CSS for Twitch Settings Table */
+.settings-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.settings-table th,
+.settings-table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.settings-table th {
+    background-color: #f2f2f2;
+}
+
+.settings-form {
+    margin-top: 20px;
+}
+
+.field-label {
+    font-weight: bold;
+}
+
+.field-value {
+    display: inline;
+    margin-right: 10px;
+}
+
+.edit-button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin-top: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.edit-button:hover {
+    background-color: #45a049;
+}
+
+
+#cameraName {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    padding: 20px;
+}
+
+.main-content h2 {
+    margin-bottom: 20px;
+}
+
+
+
+#cameraTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* Style for table header cells and data cells */
+#cameraTable th,
+#cameraTable td {
+    border: 1px solid #808080; /* Border color */
+    padding: 8px; /* Padding for content inside cells */
+    text-align: left; /* Text alignment within cells */
+}
+
+/* Style for table header cells */
+#cameraTable th {
+    background-color: #5A5A5A; /* Background color for header cells */
+}
+
+#presetTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#presetTable th, #presetTable td {
+    border: 1px solid #808080;
+    padding: 8px;
+    text-align: left;
+}
+
+#presetTable th {
+    background-color: #5A5A5A;
+}
+
+
+.preset-name {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.btn-edit, .btn-delete, .btn-move-up, .btn-move-down .showButton {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-right: 4px;
+}
+
+
+.btn-delete {
+    background-color: #d11a2a;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-right: 4px;
+}
+
+.btn-delete:hover {
+    background-color: #bd0616;
+}
+
+.btn-edit:hover, .btn-move-up:hover, .btn-move-down:hover {
+    background-color: #0056b3;
+}
+
+.btn-move-up, .btn-move-down {
+    background-color: #28a745;
+}
+
+.btn-move-up:hover, .btn-move-down:hover {
+    background-color: #218838;
+}
+
+/* Style for Camera Name */
+.camera-name {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* Style for Edit button */
+.btn-edit-camera {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-right: 10px;
+}
+
+.btn-edit-camera:hover {
+    background-color: #0056b3;
+}
+
+/* Style for Add New Preset button */
+.btn-add-preset {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 20px;
+    margin-bottom: 5px;
+}
+
+.btn-add-camera {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 0px;
+    margin-bottom: 5px;
+}   
+
+
+.btn-add-preset:hover {
+    background-color: #218838;
+}
+
+.btn-delete-camera {
+    background-color: #d11a2a;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 20px;
+    margin-bottom: 5px;
+}
+

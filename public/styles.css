@@ -1,0 +1,423 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #444444; /* Dark background color */
+    color: #ffffff; /* White text color */
+    margin: 0;
+    padding: 0;
+}
+
+
+
+
+.admin-icon {
+    width: 20px; /* Adjust as needed */
+    height: 20px; /* Adjust as needed */
+    margin-left: 10px; /* Adjust as needed */
+    position: relative;
+    top: 3px;
+}
+
+
+.ptz-heading {
+    text-align: left;
+    margin-left: 20px;
+    font-size: 18px;
+    margin-bottom: -10px;
+}
+
+.top-left-image {
+    position: fixed;
+    top: 10px;
+    left: 50px;
+width: 7%;
+}
+
+.label {
+    color: #b2b2b2;
+    font-size: 15px; /* Adjust font size */
+    margin-left: 20px; /* Adjust spacing between label and camera-pad */
+    margin-bottom: 10px; /* Reduce the gap between the label and the camera-pad */
+    font-weight: lighter; /* Set font weight to normal */
+}
+
+.label-preset {
+    color: #b2b2b2;
+    font-size: 15px; /* Adjust font size */
+    display: block; /* Set the label as a block-level element */
+    position: relative;
+    margin-top: 14px; /* Reduce the gap between the label and the camera-pad */
+    font-weight: normal; /* Set font weight to normal */
+    margin-left: -70px; /* Adjust the margin-left value */
+    font-weight: lighter; /* Set font weight to normal */
+}
+.preset-container {
+    padding-left: 60px; /* Adjust padding as needed */
+}
+
+.camera-container {
+    display: flex;
+    flex-direction: column; /* Display buttons in a vertical list */
+    align-items: flex-start; /* Align buttons to the start of the container */
+    background-color: #222222; /* Set background color for the whole box */
+    padding: 0px;
+    border-radius: 0; /* Make corners square */
+    margin-right: 30px;
+    border: none; /* Remove border */ 
+    width: 170px; /* Set width of the container */
+    height: 290px; /* Set the height to 290px */
+    margin-left: 20px;
+    overflow-y: auto; /* Make the container scrollable vertically */
+}
+
+.camera-button {
+    width: 100%; /* Ensure buttons take full width of container */
+    height: 28px; /* Set a fixed height for buttons */
+    margin-top: 2px;
+    margin-bottom: 5px; /* Adjust spacing between buttons */
+    color: white; /* Text color */
+    background-color: #222222; /* Background color */
+    border: none; /* Remove button border */
+    cursor: pointer;
+    font-size: 16px;
+    text-align: left; /* Align text to the left */
+    flex-shrink: 0; /* Prevent the button from shrinking */
+}
+
+.camera-button:hover {
+    background-color: #606060; /* Darker background color on hover */
+}
+.camera-button.selected {
+    background-color: #6082B6; /* Example background color for selected button */
+    color: white; /* Example text color for selected button */
+}
+
+
+
+.container {
+    display: flex;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+.direction-and-ptz-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.direction-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 50px);
+    grid-template-rows: repeat(3, 50px);
+    grid-gap: 10px;
+    width: 200px;
+    margin-left: 20px;
+    margin-top: 20px;
+
+}
+
+.container > .direction-pad {
+    margin-right: 20px;
+}
+
+.chat-box {
+  display: grid;
+  grid-template-columns: repeat(1, 300px);
+  grid-gap: 0;
+  background-color: #222222;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  margin-left: -70px;
+  margin-top: 10px; 
+  width: 250px;
+  height: 100px;
+  overflow-y: auto;
+}
+
+.chat-message {
+  list-style-type: none;
+  padding: 10px;
+  color: #ffffff;
+}
+.chat-box ul {
+    list-style-type: none; /* Remove bullet points */
+    padding: 0; /* Remove default padding */
+    font-size: 12px; /* Force font size */
+    margin-left: 5px;
+    font-weight: lighter; /* Set font weight to normal */
+
+}
+
+
+.chat-message:nth-child(even) {
+  background-color: #333333;
+}
+
+
+/* Styles for screens less than 600px */
+@media (max-width: 600px) {
+    .preset-pad {
+        display: grid;
+        grid-template-columns: repeat(1, 300px);
+        grid-gap: 0;
+        background-color: #222222;
+        padding: 0;
+        border-radius: 0;
+        border: none;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        margin-left: -70px;
+        margin-top: -5px;
+        width: 250px;
+        height: 699px;
+        overflow-y: auto;
+        grid-auto-rows: 50px;
+    }
+
+    .preset-button {
+        font-family: "Roboto Mono", monospace;
+        font-size: 16px;
+        margin: 0;
+        padding: 10px;
+        color: white;
+        background-color: #222222;
+        border: none;
+        cursor: pointer;
+        text-align: left;
+        box-sizing: border-box;
+        width: 100%;
+        height: 50px;
+    }
+
+    /* Hover effect for buttons on small screens */
+    .preset-button:hover {
+        background-color: #606060;
+    }
+}
+
+/* Styles for screens greater than 600px */
+@media (min-width: 601px) {
+    .preset-pad {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        background-color: #222222;
+        padding: 20px;
+        margin-right: 30px;
+        border: none;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        margin-left: -70px;
+        max-width: 1100px; /* Adjust the value as needed */
+        max-height: 660px; /* Adjust the value as needed */
+        min-height: 200px; /* Adjust the value as needed */
+        overflow-y: auto;
+
+    }
+
+    .preset-button {
+        width: 150px;
+        margin-right: 25px;
+        margin-bottom: 25px;
+        height: 60px;
+        background-color: #696969;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 20px;
+        box-shadow: 5px 5px 6px 0px black;
+    }
+
+    /* Hover effect for buttons on larger screens */
+    .preset-button:hover {
+        background-color: #1e88e5;
+        color: #ffffff;
+    }
+}
+
+
+.arrow-button {
+    width: 50px;
+    height: 50px;
+    background-color: #636363;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 20px;
+}
+.arrow-button:hover {
+    background-color: #1565c0; /* Highlight color on hover */
+}
+
+.ptz-input-wrapper {
+    display: flex;
+}
+
+.ptz-container {
+    display: flex;
+    flex-direction: column; /* Arrange elements in a column */
+    align-items: flex-start; /* Align items to the start */
+    margin-top: 20px;
+    margin-left: 19px;
+}
+
+.ptz-input {
+    width: 48px; /* Set the width to match the direction-pad buttons */
+    height: 50px; /* Set the height to match the direction-pad buttons */
+    background-color: #636363; /* Set the background color */
+    color: white; /* Set the text color */
+    border: none; /* Remove the border */
+    border-radius: 5px; /* Apply border radius */
+    font-size: 12px; /* Set font size */
+    margin-right: 8px; /* Adjust spacing between input boxes */
+    text-align: center; /* Center the text horizontally */
+    caret-color: white; /* Change the cursor color */
+}
+
+.ptz-input:focus {
+    outline: 2px solid white; /* Change the outline color for focus */
+    outline-offset: 2px; /* Adjust the outline offset if needed */
+}
+
+
+.ptz-input:last-child {
+    margin-right: 0; /* Remove margin from the last input box */
+}
+
+
+.send-button {
+    width: 172px;
+    height: 30px;
+    margin-top: 10px; /* Add space between input boxes and send button */
+    padding: 6px 18px; /* Adjust padding */
+    border: none;
+    border-radius: 5px;
+    background-color: #1565c0;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.send-button:hover {
+    background-color: #1e88e5; /* Highlight color on hover */
+}
+
+.swap-wrapper {
+    display: flex;
+}
+
+.swap-container {
+    display: flex;
+    flex-direction: column; /* Arrange elements in a column */
+    align-items: flex-start; /* Align items to the start */
+    margin-top: 10px;
+    margin-left: 20px;
+}
+
+.swap-input {
+    width: 76px; /* Set the width to match the direction-pad buttons */
+    height: 50px; /* Set the height to match the direction-pad buttons */
+    background-color: #636363; /* Set the background color */
+    color: white; /* Set the text color */
+    border: none; /* Remove the border */
+    border-radius: 5px; /* Apply border radius */
+    font-size: 12px; /* Set font size */
+    margin-right: 10px; /* Adjust spacing between input boxes */
+    text-align: center; /* Center the text horizontally */
+    caret-color: white; /* Change the cursor color */
+
+}
+.swap-input:focus {
+    outline: 2px solid white; /* Change the outline color for focus */
+    outline-offset: 2px; /* Adjust the outline offset if needed */
+}
+
+.swap-input:last-child {
+    margin-right: 0; /* Remove margin from the last input box */
+}
+
+.swap-button {
+    width: 170px;
+    height: 30px;
+    margin-top: 10px; /* Add space between input boxes and send button */
+    padding: 6px 18px; /* Adjust padding */
+    border: none;
+    border-radius: 5px;
+    background-color: #1565c0;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 16px;
+}
+.swap-button:hover {
+    background-color: #1e88e5; /* Highlight color on hover */
+}
+
+.focus-wrapper {
+    display: flex;
+}   
+    
+.focus-container {
+    display: flex;
+    flex-direction: column; /* Arrange elements in a column */
+    align-items: flex-start; /* Align items to the start */
+    margin-top: 10px;
+    margin-left: 20px;
+}
+    
+.focus-input {
+    width: 76px; /* Set the width to match the direction-pad buttons */
+    height: 50px; /* Set the height to match the direction-pad buttons */
+    background-color: #636363; /* Set the background color */
+    color: white; /* Set the text color */
+    border: none; /* Remove the border */
+    border-radius: 5px; /* Apply border radius */
+    font-size: 12px; /* Set font size */
+    margin-right: 10px; /* Adjust spacing between input boxes */
+    text-align: center; /* Center the text horizontally */
+    caret-color: white; /* Change the cursor color */
+    
+}
+.focus-input:focus {
+    outline: 2px solid white; /* Change the outline color for focus */
+    outline-offset: 2px; /* Adjust the outline offset if needed */
+}
+
+.focus-input:last-child {
+    margin-right: 0; /* Remove margin from the last input box */
+}
+
+.focus-button {
+    width: 170px;
+    height: 30px;
+    margin-top: 10px; /* Add space between input boxes and send button */
+    padding: 6px 18px; /* Adjust padding */
+    border: none;
+    border-radius: 5px;
+    background-color: #1565c0;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 16px;
+}
+.focus-button:hover {
+    background-color: #1e88e5; /* Highlight color on hover */
+}
+
+.autofocus-button {
+    width: 76px;
+    height: 50px;
+    background-color: #636363;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 20px;
+    background-image: url('focus_auto.svg');
+    background-size: 100% 100%; /* Stretch the image to fill the button */
+    background-repeat: no-repeat; /* Ensure the background image does not repeat */
+}
+
+.autofocus-button:hover {
+    background-color: #1565c0; /* Highlight color on hover */
+}
+
