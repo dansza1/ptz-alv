@@ -1,5 +1,5 @@
 
-Alveus PTZ Controller
+Alveus PTZ Control
 
 - Install Nodejs https://nodejs.org
 
@@ -14,7 +14,7 @@ Alveus PTZ Controller
 - Run start-ptz.bat or "node server.js" to start the ptz server.
   Once the server is running open http://localhost:3000 in your browser.
 
-- Click the Settings cog next to "Alveus PTZ Control" and then "Twitch Settings".
+- Click the Settings cog next to "Alveus PTZ" and then "Twitch Settings".
   Enter your twitch name and OAuth key
 
 

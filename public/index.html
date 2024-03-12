@@ -3,82 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twitch Chat Commands</title>
+    <title>Alveus PTZ</title>
     <!-- Cache-busting query parameter added to stylesheet -->
+    <link rel="icon" type="image/x-icon" href="./img/favicon.ico">
     <link rel="stylesheet" type="text/css" href="styles.css?v=1">
 </head>
 
 <body>
+<div class="heading-container">
+    <div class="logo">
+        <img src="/img/logo.webp" alt="Logo">
+    </div>
+
     <h1 class="ptz-heading">
-        Alveus PTZ Control
+        Alveus PTZ 
         <a href="admin.html">
-            <img src="settings.png" alt="Admin Settings" class="admin-icon">
+            <img src="/img/settings.png" alt="Admin Settings" class="admin-icon">
         </a>
     </h1>
-
+        <span class="layout-icons">
+        <span id="listIcon" class="list-icon"></span> 
+        <span id="gridIcon" class="grid-icon"></span> 
+        </span> 
+</div>
     <!-- Main container for direction-pad and preset-pad -->
     <div class="container">
+    <div class="left-menu">
         <div class="direction-and-ptz-container">
             <!-- Container for cameras list -->
             <h2 class="label">Camera</h2>
-            <div class="camera-container" id="cameraContainer">
-            </div>
+            <div class="camera-container" id="cameraContainer"></div>
 
             <!-- Direction buttons -->
+	<div class="direction-container">
+            <h2 class="direction-heading" style="cursor: pointer;" onclick="toggleDirectionPad('.direction-pad')">- Direction Pad</h2>
+
             <div class="direction-pad">
-                <button class="arrow-button" onclick="sendDirectionCommand('upleft')">↖</button>
-                <button class="arrow-button" onclick="sendDirectionCommand('up')">▲</button>
-                <button class="arrow-button" onclick="sendDirectionCommand('upright')">↗</button>
-                <button class="arrow-button" onclick="sendDirectionCommand('left')">◀</button>
-                <button class="arrow-button" onclick="sendDirectionCommand('')"></button>
-                <button class="arrow-button" onclick="sendDirectionCommand('right')">▶</button>
-                <button class="arrow-button" onclick="sendDirectionCommand('downleft')">↙</button>
-                <button class="arrow-button" onclick="sendDirectionCommand('down')">▼</button>
-                <button class="arrow-button" onclick="sendDirectionCommand('downright')">↘</button>
+                <button class="arrow-button" onclick="sendDirectionCommand('upleft')" onmousedown="animateButton(this)">↖</button>
+                <button class="arrow-button" onclick="sendDirectionCommand('up')" onmousedown="animateButton(this)">▲</button>
+                <button class="arrow-button" onclick="sendDirectionCommand('upright')" onmousedown="animateButton(this)">↗</button>
+                <button class="arrow-button" onclick="sendDirectionCommand('left')" onmousedown="animateButton(this)">◀</button>
+                <button class="arrow-button" onclick="sendDirectionCommand('')" onmousedown="animateButton(this)"></button>
+                <button class="arrow-button" onclick="sendDirectionCommand('right')" onmousedown="animateButton(this)">▶</button>
+                <button class="arrow-button" onclick="sendDirectionCommand('downleft')" onmousedown="animateButton(this)">↙</button>
+                <button class="arrow-button" onclick="sendDirectionCommand('down')" onmousedown="animateButton(this)">▼</button>
+                <button class="arrow-button" onclick="sendDirectionCommand('downright')" onmousedown="animateButton(this)">↘</button>
             </div>
+	</div>
 
             <!-- PTZ input buttons -->
+        <div class="direction-container">
+            <h2 class="direction-heading" style="cursor: pointer;" onclick="toggleDirectionPad('.ptz-container')">- PTZ</h2>
             <div class="ptz-container">
                 <div class="ptz-input-wrapper">
                     <input type="text" id="panInput" class="ptz-input" placeholder="Pan">
                     <input type="text" id="tiltInput" class="ptz-input" placeholder="Tilt">
                     <input type="text" id="zoomInput" class="ptz-input" placeholder="Zoom">
                 </div>
-                <button class="send-button" onclick="sendPanTiltZoom()">Send</button>
+                <button class="send-button" onclick="sendPanTiltZoom()" onmousedown="animateButton(this)">Send</button>
+            </div>
             </div>
 
             <!-- Swap buttons -->
+        <div class="direction-container">
+            <h2 class="direction-heading" style="cursor: pointer;" onclick="toggleDirectionPad('.swap-container')">- Swap</h2>
             <div class="swap-container">
+                <div class="swap-buttons">
+                    <button class="swap-num-button" onclick="setSwapNumber(2)">2</button>
+                    <button class="swap-num-button" onclick="setSwapNumber(3)">3</button>
+                    <button class="swap-num-button" onclick="setSwapNumber(4)">4</button>
+                    <button class="swap-num-button" onclick="setSwapNumber(5)">5</button>
+                    <button class="swap-num-button" onclick="setSwapNumber(6)">6</button>
+                </div>
+
+                <div class="dropdown-container">
+                    <div class="swap-dropdown1">
+                        <select id="swap-dropdown1">
+                            <option value="option1">-Select-</option>
+                            <!-- Add more options as needed -->
+                        </select>
+                    </div>
+                    <div class="swap-dropdown2">
+                        <select id="swap-dropdown2">
+                            <option value="option1">-Select-</option>
+                            <!-- Add more options as needed -->
+                        </select>
+                    </div>
+                </div>
+
                 <div class="swap-wrapper">
                     <input type="text" id="swap1" class="swap-input" placeholder="Swap 1">
                     <input type="text" id="swap2" class="swap-input" placeholder="Swap 2">
                 </div>
-                <button class="swap-button" onclick="sendSwapCommand()">Swap</button>
+                <button class="swap-button" onclick="sendSwapCommand()" onmousedown="animateButton(this)">Swap</button>
+            </div>
             </div>
 
             <!-- Focus buttons -->
+        <div class="direction-container">
+            <h2 class="direction-heading" style="cursor: pointer;" onclick="toggleDirectionPad('.focus-container')">- Focus</h2>
             <div class="focus-container">
                 <div class="focus-wrapper">
-                    <input type="text" id="focus" class="focus-input" placeholder="Focusr">
+                    <input type="text" id="focus" class="focus-input" placeholder="Focus">
                     <button class="autofocus-button" onclick="sendAutoFocusCommand()"></button>
                 </div>
-                <button class="focus-button" onclick="sendFocusCommand()">Focus</button>
+                <button class="focus-button" onclick="sendFocusCommand()" onmousedown="animateButton(this)">Focus</button>
             </div>
 
+          </div>
+        </div>
         </div>
 
         <!-- Preset buttons -->
-        <div class="preset-container">
-            <h2 class="label-preset">Presets</h2>
+        <div class="preset-container grid-layout">
+        <h2 class="label-preset">
+        Presets
+        </h2>
             <div class="preset-pad" id="presetPad">
                 <!-- These will be dynamically populated based on the selected camera -->
             </div>
-<!--	   <div class="chat-box" id="chatBox">
-              <ul id="messages"></ul>
-           </div> -->
+
+
+            <div class="custom-preset-container">
+                <h2 class="custom-label-preset">Custom Presets</h2>
+                <div class="custom-preset-pad" id="customPresetPad">
+                    <!-- These will be dynamically populated based on the selected camera -->
+                </div>
+            </div>
         </div>
 
-      </div>
     </div>
 
     <form id="commandForm" action="/send-command" method="post">
@@ -86,7 +139,6 @@
     </form>
 
     <script>
-
         function openAdminPage() {
             window.location.href = "admin.html";
         }

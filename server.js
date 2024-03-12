@@ -491,18 +491,258 @@ app.post('/move-camera-to', (req, res) => {
 
 
 
+app.post('/save-custom-preset', (req, res) => {
+    const { cameraName, selectedPreset, presetName, pan, tilt, zoom, isNewPreset, originalPresetName } = req.body;
+    console.log('Received request body:', req.body);
+    console.log('isNewPreset:', isNewPreset);
 
-// Endpoint to send command to Twitch chat
-app.post('/send-command', async (req, res) => {
+    // Read existing presets from custom-presets.json
+    fs.readFile(path.join(__dirname, 'public', 'custom-presets.json'), 'utf8', (err, data) => {
+        if (err && err.code !== 'ENOENT') {
+            console.error('Error reading custom presets:', err);
+            return res.status(500).json({ error: 'Failed to save custom preset' });
+        }
+
+        let presets = [];
+        if (data) {
+            presets = JSON.parse(data);
+        }
+
+        // Check if a preset with the same name already exists
+        const existingPreset = presets.find(preset => preset.presetName === presetName);
+        if (existingPreset && isNewPreset) {
+            return res.status(400).json({ error: 'A preset with the same name already exists' });
+        }
+
+        if (isNewPreset) {
+            // For creating a new preset
+            presets.push({
+                cameraName,
+                selectedPreset,
+                presetName,
+                pan,
+                tilt,
+                zoom
+            });
+        } else {
+            // For editing an existing preset
+            const index = presets.findIndex(preset => preset.presetName === originalPresetName);
+            if (index === -1) {
+                return res.status(404).json({ error: 'Original preset not found' });
+            }
+            presets[index] = {
+                cameraName,
+                selectedPreset,
+                presetName,
+                pan,
+                tilt,
+                zoom
+            };
+        }
+
+        // Write updated presets to custom-presets.json
+        fs.writeFile(path.join(__dirname, 'public', 'custom-presets.json'), JSON.stringify(presets, null, 2), 'utf8', err => {
+            if (err) {
+                console.error('Error writing custom presets:', err);
+                return res.status(500).json({ error: 'Failed to save custom preset' });
+            }
+            // Respond with success message
+            res.status(200).json({ message: 'Custom preset saved successfully' });
+        });
+    });
+});
+
+
+
+// DELETE route to handle deleting a custom preset
+app.delete('/delete-custom-preset', (req, res) => {
+    const presetNameToDelete = req.body.presetName;
+
+    // Read existing presets from custom-presets.json
+    fs.readFile(path.join(__dirname, 'public', 'custom-presets.json'), 'utf8', (err, data) => {
+        if (err && err.code !== 'ENOENT') {
+            console.error('Error reading custom presets:', err);
+            return res.status(500).json({ error: 'Failed to delete custom preset' });
+        }
+
+        let presets = [];
+        if (data) {
+            presets = JSON.parse(data);
+        }
+
+        // Find the index of the preset to delete
+        const indexToDelete = presets.findIndex(preset => preset.presetName === presetNameToDelete);
+        if (indexToDelete === -1) {
+            return res.status(404).json({ error: 'Preset not found' });
+        }
+
+        // Remove the preset from the array
+        presets.splice(indexToDelete, 1);
+
+        // Write the updated presets back to the JSON file
+        fs.writeFile(path.join(__dirname, 'public', 'custom-presets.json'), JSON.stringify(presets, null, 2), 'utf8', err => {
+            if (err) {
+                console.error('Error writing custom presets:', err);
+                return res.status(500).json({ error: 'Failed to delete custom preset' });
+            }
+            // Respond with success message
+            res.status(200).json({ message: 'Custom preset deleted successfully' });
+        });
+    });
+});
+
+app.get('/custom-presets', (req, res) => {
+    // Read custom presets from custom-presets.json
+    fs.readFile(path.join(__dirname, 'public', 'custom-presets.json'), 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading custom presets:', err);
+            return res.status(500).json({ error: 'Failed to fetch custom presets' });
+        }
+
+        // Parse presets data and send as response
+        const presets = JSON.parse(data);
+        res.json({ presets });
+    });
+});
+
+app.get('/get-preset-by-name', (req, res) => {
+    const presetName = req.query.presetName;
+
+    fs.readFile(path.join(__dirname, 'public', 'custom-presets.json'), 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading file:', err);
+            return res.status(500).json({ error: 'Failed to read file' });
+        }
+
+        try {
+            const presets = JSON.parse(data);
+            const foundPreset = presets.find(preset => preset.presetName === presetName);
+            if (foundPreset) {
+                res.json(foundPreset);
+            } else {
+                res.status(404).json({ error: 'Preset not found' });
+            }
+        } catch (error) {
+            console.error('Error parsing JSON:', error);
+            res.status(500).json({ error: 'Failed to parse JSON' });
+        }
+    });
+});
+
+let lastCommand = ""; // Variable to store the last command
+
+app.post('/send-command', (req, res) => {
     const command = req.body.command;
     sendMessage(command);
-    res.send('Command sent successfully'); // Send a response without redirecting
-});
+    res.send('Command sent successfully');
+});     
 
 // Function to send message to Twitch chat
 function sendMessage(message) {
+    // Check if the command contains !ptzmove and matches the last command
+    if (message.includes('!ptzmove') && message === lastCommand) {
+        message += " ."; // Add " ." to the end of the message
+    }
     client.say(config.twitch.channel, message);
+    
+    // Save the last command after the "." check
+    lastCommand = message;
+}       
+
+function listenForMessages(cameraName) {
+    return new Promise((resolve, reject) => {
+        let messageReceived = false;
+
+        // Listen for Twitch chat messages
+        client.on('message', (channel, tags, message, self) => {
+            if (self) return; // Ignore messages from the bot itself
+
+            // Check if the message contains presets
+            if (message.startsWith('PTZ Presets:')) {
+                // Extract presets from the message
+                const presets = message.substring(12).split(',');
+                resolve(presets);
+                messageReceived = true;
+            }
+        });
+
+        // Stop listening after 5 seconds
+        const timeout = setTimeout(() => {
+            if (!messageReceived) {
+                console.log('No presets found within the timeout period');
+                resolve([]); // Resolve with an empty array if no message received
+            }
+        }, 5000);
+
+        // Clear the timeout if presets are received before the timeout
+        client.once('message', () => {
+            clearTimeout(timeout);
+        });
+    })
+    .catch(error => {
+        console.error('Error in listenForMessages:', error);
+        // Handle any errors encountered during message listening
+        throw error; // Rethrow the error to propagate it to the caller
+    });
 }
+
+
+// Endpoint to receive the command from the frontend
+app.post('/fetch-presets', (req, res) => {
+    const cameraName = req.body.cameraName;
+
+    // Listen for Twitch chat messages for 5 seconds
+    listenForMessages(cameraName)
+        .then(presets => {
+            // Send the presets back to the frontend
+            res.json({ presets });
+        })
+        .catch(error => {
+            console.error('Error listening for Twitch messages:', error);
+            res.status(500).json({ error: 'Failed to fetch presets' });
+        });
+});
+
+app.post('/add-sync-presets', (req, res) => {
+    const { cameraName, newPresets } = req.body;
+    if (!cameraName || !newPresets || newPresets.length === 0 || cameraName.trim() === '') {
+        console.error('Invalid camera name or presets provided');
+        return res.status(400).send('Invalid camera name or presets provided');
+    }
+
+    fs.readFile(path.join(__dirname, 'public', 'cameras.json'), 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading cameras data:', err);
+            return res.status(500).send('Error reading cameras data');
+        }
+
+        let camerasData;
+        try {
+            camerasData = JSON.parse(data);
+        } catch (parseError) {
+            console.error('Error parsing cameras data:', parseError);
+            return res.status(500).send('Error parsing cameras data');
+        }
+
+        const cameraIndex = camerasData.cameras.findIndex(camera => camera.name === cameraName);
+        if (cameraIndex === -1) {
+            console.error('Camera not found:', cameraName);
+            return res.status(404).send('Camera not found');
+        }
+
+        camerasData.cameras[cameraIndex].presets.push(...newPresets);
+
+        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData), 'utf8', (writeErr) => {
+            if (writeErr) {
+                console.error('Error writing cameras data:', writeErr);
+                return res.status(500).send('Error writing cameras data');
+            }
+
+            console.log('New presets added successfully:', newPresets);
+            res.send('New presets added successfully');
+        });
+    });
+});
 
 
 // Server listening on port 3000

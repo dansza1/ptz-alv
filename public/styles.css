@@ -1,35 +1,97 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #444444; /* Dark background color */
+    background-color: #303030; /* Dark background color */
     color: #ffffff; /* White text color */
     margin: 0;
     padding: 0;
+    font-family: var(--font-ptsans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+}
+.logo {
+    margin-right: -10px; /* Adjust spacing between logo and text */
+    margin-left: 10px; /* Adjust spacing between logo and text */
+}
+
+.logo img {
+    width: 50px; /* Adjust width of the logo image */
+    height: auto; /* Maintain aspect ratio */
 }
 
 
+.layout-icons {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    font-size: 15px;
+    cursor: pointer;
+}
 
+.layout-icons > *:not(:last-child) {
+    margin-right: 5px; /* Adjust the gap between icons */
+}
+
+.layout-icons:hover  {
+    cursor: pointer;
+}
+
+.active-icon {
+}
+
+.heading-container {
+    position: relative; /* Ensure relative positioning for absolute child */
+    background-color: black; /* Change the background color as needed */
+    color: #fff; /* Change the text color as needed */
+    height: 60px;
+    display: flex;
+    box-shadow: 5px 0px 10px rgba(0, 0, 0, 0.3); /* Add shadow on the right side */
+}
+
+.heading-container::before {
+    content: "";
+    position: absolute;
+    bottom: -10px; /* Adjust as needed */
+    left: 0;
+    width: 100%;
+    height: 10px; /* Adjust as needed */
+    background: linear-gradient(to top right, transparent, rgba(0, 0, 0, 0.3)); /* Add gradient for shadow effect */
+}
+
+
+.box-background {
+    position: absolute;
+    margin-top: -20px;
+    left: 0;
+    width: 225px; /* Set width to fill the container */
+    height: 40px; /* Set height to fill the container */
+    background-color: #b2b2b2; /* Specify your desired background color */
+    z-index: 2; /* Set z-index lower than the heading to position it behind */
+}
 
 .admin-icon {
     width: 20px; /* Adjust as needed */
     height: 20px; /* Adjust as needed */
-    margin-left: 10px; /* Adjust as needed */
+    margin-left: 5px; /* Adjust as needed */
     position: relative;
-    top: 3px;
+    top: 4px;
 }
 
-
+.left-items {
+    padding-left: 5px; /* Adjust padding as needed */
+}
 .ptz-heading {
     text-align: left;
     margin-left: 20px;
     font-size: 18px;
-    margin-bottom: -10px;
+    margin-top: 15px;
+    position: relative; /* Ensure proper positioning */
+    z-index: 3; /* Set a higher z-index value to display it on top */
 }
 
 .top-left-image {
     position: fixed;
     top: 10px;
     left: 50px;
-width: 7%;
+    width: 7%;
 }
 
 .label {
@@ -40,18 +102,46 @@ width: 7%;
     font-weight: lighter; /* Set font weight to normal */
 }
 
-.label-preset {
+.preset-container {
+    margin-top: -20px;
+    padding-left: 60px; /* Adjust padding as needed */
+}
+
+.custom-preset-container {
+   margin-top: 40px;
+}
+
+.direction-container {
+}
+
+.direction-heading {
+    margin-top: 10px;
+    font-size: 14px;
     color: #b2b2b2;
     font-size: 15px; /* Adjust font size */
-    display: block; /* Set the label as a block-level element */
-    position: relative;
-    margin-top: 14px; /* Reduce the gap between the label and the camera-pad */
-    font-weight: normal; /* Set font weight to normal */
-    margin-left: -70px; /* Adjust the margin-left value */
+    margin-left: 20px; /* Adjust spacing between label and camera-pad */
+    margin-bottom: -5px; /* Reduce the gap between the label and the camera-pad */
     font-weight: lighter; /* Set font weight to normal */
 }
-.preset-container {
-    padding-left: 60px; /* Adjust padding as needed */
+
+.toggle-button {
+    float: right;
+}
+
+.direction-pad.collapsed {
+    display: none;
+}
+
+.ptz-container.collapsed {
+    display: none;
+}
+
+.swap-container.collapsed {
+    display: none;
+}
+
+.focus-container.collapsed {
+    display: none;
 }
 
 .camera-container {
@@ -63,8 +153,8 @@ width: 7%;
     border-radius: 0; /* Make corners square */
     margin-right: 30px;
     border: none; /* Remove border */ 
-    width: 170px; /* Set width of the container */
-    height: 290px; /* Set the height to 290px */
+    width: 172px; /* Set width of the container */
+    height: 282px; /* Set the height to 290px */
     margin-left: 20px;
     overflow-y: auto; /* Make the container scrollable vertically */
 }
@@ -95,24 +185,10 @@ width: 7%;
 
 .container {
     display: flex;
-    margin-top: 20px;
+    margin-top: 10px;
     margin-bottom: 30px;
 }
-.direction-and-ptz-container {
-    display: flex;
-    flex-direction: column;
-}
 
-.direction-pad {
-    display: grid;
-    grid-template-columns: repeat(3, 50px);
-    grid-template-rows: repeat(3, 50px);
-    grid-gap: 10px;
-    width: 200px;
-    margin-left: 20px;
-    margin-top: 20px;
-
-}
 
 .container > .direction-pad {
     margin-right: 20px;
@@ -154,9 +230,11 @@ width: 7%;
 }
 
 
+
 /* Styles for screens less than 600px */
 @media (max-width: 600px) {
-    .preset-pad {
+.list-layout {
+    .preset-pad, .custom-preset-pad {
         display: grid;
         grid-template-columns: repeat(1, 300px);
         grid-gap: 0;
@@ -164,20 +242,21 @@ width: 7%;
         padding: 0;
         border-radius: 0;
         border: none;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        box-shadow: 5px 5px 6px 0px black;
         margin-left: -70px;
-        margin-top: -5px;
+        margin-top: 58px;
         width: 250px;
-        height: 699px;
+        max-height: 699px; /* Adjust the value as needed */
+        min-height: 250px; /* Adjust the value as needed */
         overflow-y: auto;
         grid-auto-rows: 50px;
     }
 
-    .preset-button {
+    .preset-button, .custom-preset-button {
         font-family: "Roboto Mono", monospace;
         font-size: 16px;
         margin: 0;
-        padding: 10px;
+        padding-left: 15px; /* Adjust the value as needed */
         color: white;
         background-color: #222222;
         border: none;
@@ -187,54 +266,374 @@ width: 7%;
         width: 100%;
         height: 50px;
     }
+      .preset-image, .custom-preset-image, .layout-icons {
+        display: none; /* Hide the image by default */
+    }
+
 
     /* Hover effect for buttons on small screens */
-    .preset-button:hover {
+    .preset-button:hover, .custom-preset-button:hover {
         background-color: #606060;
     }
+      .label-preset {
+    	color: #b2b2b2;
+    	font-size: 15px; /* Adjust font size */
+    	display: block; /* Set the label as a block-level element */
+    	position: absolute;
+    	font-weight: normal; /* Set font weight to normal */
+    	margin-top: 35px;
+    	margin-left: -70px; /* Adjust the margin-left value */
+    	font-weight: lighter; /* Set font weight to normal */
+    } 
+  .custom-label-preset {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #b2b2b2;
+        font-size: 15px; /* Adjust font size */
+        display: block; /* Set the label as a block-level element */
+        position: relative;
+        margin-bottom: -50px;
+        margin-top: 0px;
+        margin-left: -70px; /* Adjust the margin-left value */
+        font-weight: lighter; /* Set font weight to normal */
+    } 
+
+
+  }
+
+.grid-layout {
+.preset-pad, .custom-preset-pad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    border: none;
+    margin-top: 20px;
+    margin-left: -50px;
+    max-width: 400px; /* Adjust the value as needed */
+    max-height: 850px; /* Adjust the value as needed */
+    min-height: 200px; /* Adjust the value as needed */
+    overflow-y: auto;
 }
 
+.preset-button-container, .custom-preset-button-container {
+    display: inline-block;
+    text-align: center;
+    margin-bottom: 20px; /* Adjust as needed */
+    margin-right: 25px; /* Add margin between containers */
+}
+
+.preset-button, .custom-preset-button {
+    width: 220px; /* Adjust width as needed */
+    display: block; /* Ensure proper alignment */
+    margin: 0 auto 0px; /* Center image and button and add space below */
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3); /* Add 3D shadow effect */
+    cursor: pointer; /* Add cursor pointer */
+    border-top-left-radius: 0px; /* Adjust the radius for the top-left corner */
+    border-top-right-radius: 0px; /* Adjust the radius for the top-right corner */
+    border-bottom-left-radius: 5px; /* Keep the bottom-left corner square */
+    border-bottom-right-radius: 5px; /* Keep the bottom-right corner square */
+}
+
+
+.preset-image, .custom-preset-image {
+    width: 220px; /* Adjust width as needed */
+    display: block; /* Ensure proper alignment */
+    margin: 0 auto 0px; /* Center image and button and add space below */
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3); /* Add 3D shadow effect */
+    cursor: pointer; /* Add cursor pointer */
+    border-top-left-radius: 5px; /* Adjust the radius for the top-left corner */
+    border-top-right-radius: 5px; /* Adjust the radius for the top-right corner */
+    border-bottom-left-radius: 0; /* Keep the bottom-left corner square */
+    border-bottom-right-radius: 0; /* Keep the bottom-right corner square */
+}
+.preset-image, .custom-preset-image {
+    height: 124px; /* Maintain aspect ratio */
+}
+
+.preset-button, .custom-preset-button {
+    height: 30px; /* Adjust height of the button */
+    background-color: #1F1B24; /* Button background color */
+    color: white; /* Button text color */
+    border: none; /* Remove border */
+    cursor: pointer; /* Add cursor pointer */
+    font-size: 18px; /* Adjust font size */
+    /* Add other button styles as needed */
+}
+
+.label-preset {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #b2b2b2;
+    font-size: 15px; /* Adjust font size */
+    display: block; /* Set the label as a block-level element */
+    position: relative;
+    margin-bottom: -10px;
+    margin-top: 35px;
+    margin-left: -45px; /* Adjust the margin-left value */
+    font-weight: lighter; /* Set font weight to normal */
+} 
+
+
+.custom-label-preset {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #b2b2b2;
+    font-size: 15px; /* Adjust font size */
+    display: block; /* Set the label as a block-level element */
+    position: relative;
+    margin-bottom: -10px;
+    margin-top: 35px;
+    margin-left: -45px; /* Adjust the margin-left value */
+    font-weight: lighter; /* Set font weight to normal */
+} 
+
+/* Hover effect for buttons on larger screens */
+.preset-button:hover,
+.preset-image:hover + .preset-button {
+    background-color: #1e88e5;
+    color: #ffffff;
+}
+/* Hover effect for buttons on larger screens */
+.custom-preset-button:hover,
+.custom-preset-image:hover + .custom-preset-button {
+    background-color: #1e88e5;
+    color: #ffffff;
+}
+
+}
+
+}
 /* Styles for screens greater than 600px */
 @media (min-width: 601px) {
-    .preset-pad {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
+
+.list-layout {
+
+    .preset-pad, .custom-preset-pad {
+        display: grid;
+        grid-gap: 0;
         background-color: #222222;
-        padding: 20px;
-        margin-right: 30px;
+        padding: 0;
+        border-radius: 0;
         border: none;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-        margin-left: -70px;
-        max-width: 1100px; /* Adjust the value as needed */
-        max-height: 660px; /* Adjust the value as needed */
-        min-height: 200px; /* Adjust the value as needed */
-        overflow-y: auto;
-
-    }
-
-    .preset-button {
-        width: 150px;
-        margin-right: 25px;
-        margin-bottom: 25px;
-        height: 60px;
-        background-color: #696969;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 20px;
         box-shadow: 5px 5px 6px 0px black;
+        margin-left: -70px;
+        margin-top: 58px;
+        max-width: 600px; /* Adjust the value as needed */
+        max-height: 699px; /* Adjust the value as needed */
+        min-height: 250px; /* Adjust the value as needed */
+        min-width: 250px; /* Adjust the value as needed */
+        overflow-y: auto;
+        grid-auto-rows: 50px;
     }
 
-    /* Hover effect for buttons on larger screens */
-    .preset-button:hover {
-        background-color: #1e88e5;
-        color: #ffffff;
+    .preset-button, .custom-preset-button {
+        font-family: "Roboto Mono", monospace;
+        font-size: 16px;
+        margin: 0;
+        padding-left: 15px; /* Adjust the value as needed */
+        color: white;
+        background-color: #222222;
+        border: none;
+        cursor: pointer;
+        text-align: left;
+        box-sizing: border-box;
+        width: 100%;
+        height: 50px
     }
+      .preset-image, .custom-preset-image {
+        display: none; /* Hide the image by default */
+    }
+
+
+    /* Hover effect for buttons on small screens */
+    .preset-button:hover, .custom-preset-button:hover {
+        background-color: #606060;
+    }
+      .label-preset {
+        color: #b2b2b2;
+        font-size: 15px; /* Adjust font size */
+        display: block; /* Set the label as a block-level element */
+        position: absolute;
+        font-weight: normal; /* Set font weight to normal */
+        margin-top: 35px;
+        margin-left: -70px; /* Adjust the margin-left value */
+        font-weight: lighter; /* Set font weight to normal */
+    }
+
+   .custom-label-preset {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #b2b2b2;
+        font-size: 15px; /* Adjust font size */
+        display: block; /* Set the label as a block-level element */
+        position: relative;
+        margin-bottom: -50px;
+        margin-top: 0px;
+        margin-left: -70px; /* Adjust the margin-left value */
+        font-weight: lighter; /* Set font weight to normal */
+    }
+
+
+.preset-pad.single-column, .custom-preset-pad.single-column {
+    grid-template-columns: repeat(1, 1fr);
+    width: 200px;
 }
 
+.preset-pad:not(.single-column), .custom-preset-pad:not(.single-column) {
+    grid-template-columns: repeat(2, 1fr);
+    width: 400px;
+}
+
+
+
+}
+
+.grid-layout {
+.preset-pad, .custom-preset-pad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    border: none;
+    margin-top: 20px;
+    margin-left: -50px;
+    max-width: 1000px; /* Adjust the value as needed */
+    max-height: 850px; /* Adjust the value as needed */
+    min-height: 200px; /* Adjust the value as needed */
+    overflow-y: auto;
+}
+
+.preset-button-container, .custom-preset-button-container {
+    display: inline-block;
+    text-align: center;
+    margin-bottom: 20px; /* Adjust as needed */
+    margin-right: 25px; /* Add margin between containers */
+}
+
+.preset-button, .custom-preset-button {
+    width: 220px; /* Adjust width as needed */
+    display: block; /* Ensure proper alignment */
+    margin: 0 auto 0px; /* Center image and button and add space below */
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3); /* Add 3D shadow effect */
+    cursor: pointer; /* Add cursor pointer */
+    border-top-left-radius: 0px; /* Adjust the radius for the top-left corner */
+    border-top-right-radius: 0px; /* Adjust the radius for the top-right corner */
+    border-bottom-left-radius: 5px; /* Keep the bottom-left corner square */
+    border-bottom-right-radius: 5px; /* Keep the bottom-right corner square */
+}
+
+
+.preset-image, .custom-preset-image {
+    width: 220px; /* Adjust width as needed */
+    display: block; /* Ensure proper alignment */
+    margin: 0 auto 0px; /* Center image and button and add space below */
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3); /* Add 3D shadow effect */
+    cursor: pointer; /* Add cursor pointer */
+    border-top-left-radius: 5px; /* Adjust the radius for the top-left corner */
+    border-top-right-radius: 5px; /* Adjust the radius for the top-right corner */
+    border-bottom-left-radius: 0; /* Keep the bottom-left corner square */
+    border-bottom-right-radius: 0; /* Keep the bottom-right corner square */
+}
+.preset-image, .custom-preset-image {
+    height: 124px; /* Maintain aspect ratio */
+}
+
+.preset-button, .custom-preset-button {
+    height: 30px; /* Adjust height of the button */
+    background-color: #1F1B24; /* Button background color */
+    color: white; /* Button text color */
+    border: none; /* Remove border */
+    cursor: pointer; /* Add cursor pointer */
+    font-size: 18px; /* Adjust font size */
+    /* Add other button styles as needed */
+}
+
+.label-preset {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #b2b2b2;
+    font-size: 15px; /* Adjust font size */
+    display: block; /* Set the label as a block-level element */
+    position: relative;
+    margin-bottom: -10px;
+    margin-top: 35px;
+    margin-left: -45px; /* Adjust the margin-left value */
+    font-weight: lighter; /* Set font weight to normal */
+} 
+
+.custom-label-preset {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #b2b2b2;
+    font-size: 15px; /* Adjust font size */
+    display: block; /* Set the label as a block-level element */
+    position: relative;
+    margin-bottom: -20px;
+    margin-top: 35px;
+    margin-left: -45px; /* Adjust the margin-left value */
+    font-weight: lighter; /* Set font weight to normal */
+} 
+
+
+
+/* Hover effect for buttons on larger screens */
+.preset-button:hover,
+.preset-image:hover + .preset-button {
+    background-color: #1e88e5;
+    color: #ffffff;
+}
+
+/* Hover effect for buttons on larger screens */
+.custom-preset-button:hover,
+.custom-preset-image:hover + .custom-preset-button {
+    background-color: #1e88e5;
+    color: #ffffff;
+}
+
+}
+
+}
+
+.list-icon {
+    /* Set the background image to list.png */
+    background-image: url('/img/list.png');
+    /* Set the width and height of the icon */
+    width: 16px; /* Adjust as needed */
+    height: 16px; /* Adjust as needed */
+    /* Display the background image */
+    display: inline-block;
+}
+
+.grid-icon {
+    /* Set the background image to grid.png */
+    background-image: url('/img/grid.png');
+    /* Set the width and height of the icon */
+    width: 16px; /* Adjust as needed */
+    height: 16px; /* Adjust as needed */
+    /* Display the background image */
+    display: inline-block;
+}
+
+
+.direction-and-ptz-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.direction-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 50px);
+    grid-template-rows: repeat(3, 50px);
+    grid-gap: 10px;
+    width: 200px;
+    margin-left: 20px;
+    margin-top: 7px;
+}
 
 .arrow-button {
     width: 50px;
@@ -245,9 +644,16 @@ width: 7%;
     border-radius: 5px;
     cursor: pointer;
     font-size: 20px;
+    transition: transform 0.1s ease; /* Smooth transition for scaling */
 }
 .arrow-button:hover {
     background-color: #1565c0; /* Highlight color on hover */
+}
+
+@keyframes button-press {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.9); } /* Scale down to 90% */
+    100% { transform: scale(1); }
 }
 
 .ptz-input-wrapper {
@@ -258,7 +664,7 @@ width: 7%;
     display: flex;
     flex-direction: column; /* Arrange elements in a column */
     align-items: flex-start; /* Align items to the start */
-    margin-top: 20px;
+    margin-top: 7px;
     margin-left: 19px;
 }
 
@@ -268,11 +674,12 @@ width: 7%;
     background-color: #636363; /* Set the background color */
     color: white; /* Set the text color */
     border: none; /* Remove the border */
-    border-radius: 5px; /* Apply border radius */
     font-size: 12px; /* Set font size */
     margin-right: 8px; /* Adjust spacing between input boxes */
     text-align: center; /* Center the text horizontally */
     caret-color: white; /* Change the cursor color */
+    border-radius: 5px;
+
 }
 
 .ptz-input:focus {
@@ -303,29 +710,87 @@ width: 7%;
     background-color: #1e88e5; /* Highlight color on hover */
 }
 
+.dropdown {
+    margin-bottom: 10px; /* Adjust margin as needed */
+}
+
+.swap-dropdown1 select {
+    width: 80px; /* Adjust width as needed */
+    padding: 5px;
+    color: white;
+    font-size: 12px;
+    border: none;
+    background-color: #636363;
+    cursor: pointer;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.swap-dropdown2 select {
+    width: 80px; /* Adjust width as needed */
+    padding: 5px;
+    color: white;
+    font-size: 12px;
+    border: none;
+    background-color: #636363;
+    cursor: pointer;
+}
+
+.dropdown-container {
+    display: flex; /* Use flexbox to align items */
+}
+
+
+.dropdown select:focus {
+    outline: none;
+    border-color: #007bff; /* Change focus color as needed */
+}
+
+
 .swap-wrapper {
     display: flex;
 }
+
+.swap-buttons { 
+    display: flex;
+} 
+
+.swap-num-button { 
+    width: 30px;
+    height: 30px;
+    background-color: #1F1B24;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    margin-right: 5px;
+    margin-bottom: 12px;
+    margin-top: 5px;
+}   
+.swap-num-button:hover {
+    background-color: #1565c0; /* Highlight color on hover */
+} 
+
 
 .swap-container {
     display: flex;
     flex-direction: column; /* Arrange elements in a column */
     align-items: flex-start; /* Align items to the start */
-    margin-top: 10px;
+    margin-top: 7px;
     margin-left: 20px;
 }
 
 .swap-input {
     width: 76px; /* Set the width to match the direction-pad buttons */
-    height: 50px; /* Set the height to match the direction-pad buttons */
+    height: 40px; /* Set the height to match the direction-pad buttons */
     background-color: #636363; /* Set the background color */
     color: white; /* Set the text color */
     border: none; /* Remove the border */
-    border-radius: 5px; /* Apply border radius */
     font-size: 12px; /* Set font size */
     margin-right: 10px; /* Adjust spacing between input boxes */
     text-align: center; /* Center the text horizontally */
     caret-color: white; /* Change the cursor color */
+    border-radius: 5px;
 
 }
 .swap-input:focus {
@@ -361,7 +826,7 @@ width: 7%;
     display: flex;
     flex-direction: column; /* Arrange elements in a column */
     align-items: flex-start; /* Align items to the start */
-    margin-top: 10px;
+    margin-top: 7px;
     margin-left: 20px;
 }
     
@@ -412,7 +877,7 @@ width: 7%;
     border-radius: 5px;
     cursor: pointer;
     font-size: 20px;
-    background-image: url('focus_auto.svg');
+    background-image: url('/img/focus_auto.svg');
     background-size: 100% 100%; /* Stretch the image to fill the button */
     background-repeat: no-repeat; /* Ensure the background image does not repeat */
 }

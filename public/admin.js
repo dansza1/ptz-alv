@@ -133,7 +133,7 @@ function showTwitchSettings() {
 }
 
 
-
+// Left Menu with list of Cameras
 function populateCurrentCameras() {
     const currentCameraList = document.getElementById('currentCameraList');
     currentCameraList.innerHTML = '';
@@ -173,6 +173,7 @@ function populateCurrentCameras() {
 }
 
 
+// Add Camera button
 function showAddCamera() {
     const mainContent = document.getElementById('mainContent');
     mainContent.innerHTML = `
@@ -186,6 +187,7 @@ function showAddCamera() {
 }
 
 
+// Edit Camera button
 function editCamera(cameraName) {
     const newCameraName = prompt('Enter the new name for the camera:');
     if (newCameraName === null || newCameraName.trim() === '') {
@@ -239,6 +241,8 @@ function deleteCamera(cameraName) {
     }
 }
 
+
+// Manage Cameras table
 function showCamera() {
     // Remove 'active' class from previously selected menu item
     const activeMenuItem = document.querySelector('.menu-item.active');
@@ -298,6 +302,8 @@ function showCamera() {
 }
 
 
+
+// Manage Camera presets table
 function showCameraDetails(cameraName) {
     const mainContent = document.getElementById('mainContent');
     mainContent.innerHTML = `
@@ -306,10 +312,12 @@ function showCameraDetails(cameraName) {
                 <span class="camera-name">Camera Name: ${cameraName}</span>
             </div>
             <button class="btn-add-preset" onclick="addNewPreset('${cameraName}')">Add New Preset</button>
+            <button class="btn-add-custom-preset" onclick="showCustomPresetInputs('${cameraName}')">Add Custom Preset</button>
+            <button class="btn-sync-preset" onclick="syncPresets('${cameraName}')">Sync Presets</button>
             <table id="presetTable">
                 <thead>
                     <tr>
-                        <th>#</th>
+                        <th>#</th> 
                         <th>Preset Name</th>
                         <th>Actions</th>
                     </tr>
@@ -318,9 +326,28 @@ function showCameraDetails(cameraName) {
                     <!-- Presets for the selected camera will be dynamically populated here -->
                 </tbody>
             </table>
+            <div style="margin-top: 20px;"></div> <!-- Add a gap between the two tables -->
+            <table id="customPresetTable"> <!-- New container for custom presets table -->
+                <thead>
+                    <tr>
+                        <th>#</th> 
+                        <th>Preset Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="customPresetList">
+                    <!-- Custom presets for the selected camera will be dynamically populated here -->
+                </tbody>
+            </table>
         </div>
     `;
+    fetchAndPopulatePresets(cameraName); // Call to fetch and populate regular presets
+    fetchAndPopulateCustomPresets(cameraName); // Call to fetch and populate custom presets
+}
 
+
+// Function to fetch and populate regular presets
+function fetchAndPopulatePresets(cameraName) {
     fetch('/cameras')
         .then(response => response.json())
         .then(data => {
@@ -349,6 +376,382 @@ function showCameraDetails(cameraName) {
             });
         })
         .catch(error => console.error('Error fetching presets:', error));
+}
+
+function fetchAndPopulateCustomPresets(cameraName) {
+    fetch('/custom-presets')
+        .then(response => response.json())
+        .then(data => {
+            const customPresetList = document.getElementById('customPresetList');
+            customPresetList.innerHTML = ''; // Clear the custom preset list before populating
+            
+            data.presets.filter(preset => preset.cameraName === cameraName).forEach((preset, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><span class="preset-name">${preset.presetName}</span></td>
+                    <td>
+                        <button class="btn-edit" onclick="editCustomPreset('${cameraName}', '${preset.presetName}')">Edit</button>
+                        <button class="btn-delete" onclick="deleteCustomPreset('${cameraName}', '${preset.presetName}')">Delete</button>
+                    </td>
+                `;
+                customPresetList.appendChild(row);
+            }); 
+            
+            // Add event listener to edit button
+            document.querySelectorAll('.btn-edit').forEach(button => {
+                button.addEventListener('click', () => {
+                    const presetName = button.parentElement.parentElement.querySelector('.preset-name').textContent;
+                    // Handle edit functionality here
+                }); 
+            });
+
+            // Show or hide the custom presets table based on whether the list is empty
+            const customPresetTable = document.getElementById('customPresetTable');
+            if (customPresetList.children.length > 0) {
+                customPresetTable.style.display = 'block';
+            } else {
+                customPresetTable.style.display = 'none';
+            }      
+        })
+        .catch(error => console.error('Error fetching custom presets:', error));
+}
+
+
+function populateCustomPresetInputs(presetName) {
+    fetch(`/get-preset-by-name?presetName=${presetName}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch preset data');
+            }
+            return response.json();
+        })
+        .then(presetData => {
+            // Now populate the inputs with the fetched presetData
+            document.getElementById('presetName').value = presetData.presetName;
+            document.getElementById('pan').value = presetData.pan;
+            document.getElementById('tilt').value = presetData.tilt;
+            document.getElementById('zoom').value = presetData.zoom;
+
+            // Pre-select the dropdown option based on selectedPreset
+            const selectedPreset = presetData.selectedPreset;
+            const dropdownList = document.getElementById('presetSelect');
+            Array.from(dropdownList.options).forEach(option => {
+                if (option.value === selectedPreset) {
+                    option.selected = true;
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching preset data:', error);
+        });
+}
+
+
+function syncPresets(cameraName) {
+    showDialog('Fetching presets from Twitch');
+    // Construct the command to be sent
+    const command = `!ptzlist ${cameraName.toLowerCase()}`;
+
+
+    // Send the command to the backend endpoint
+    fetch('/send-command', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ command })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to send command');
+        }
+        console.log('Command sent successfully');
+        // After successfully sending the command, listen for Twitch chat messages
+        fetchSyncPresets(cameraName);
+    })
+    .catch(error => {
+        console.error('Error sending command:', error);
+    });
+}
+
+function fetchSyncPresets(cameraName) {
+    // Prepare the request body
+    const requestBody = {
+        cameraName: cameraName
+    };
+
+    // Send a POST request to the backend endpoint
+    fetch('/fetch-presets', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to fetch presets');
+        }
+        return response.json();
+    })
+.then(data => {
+    // Check if the presets array is not empty
+    if (data.presets && data.presets.length > 0) {
+        // Handle the received presets
+        const presets = data.presets;
+        console.log('Received presets:', presets);
+        closeDialog();
+        // Display new presets on the UI
+        displaySyncPresets(cameraName, presets);
+    } else {
+        // Handle the case where no presets are received
+        console.log('No presets received.');
+        closeDialog();
+	alert('No presets found');
+        // You can add code here to display a message to the user or handle the situation accordingly
+    }
+})
+    .catch(error => {
+        console.error('Error fetching presets:', error);
+        // Handle the error, display a message to the user, etc.
+    });
+}
+
+function displaySyncPresets(cameraName, fetchedPresets) {
+    // Fetch presets from the server
+    fetch('/cameras')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch camera data');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const selectedCamera = data.cameras.find(camera => camera.name === cameraName);
+            if (!selectedCamera) {
+                console.error('Selected camera not found:', cameraName);
+                return;
+            }
+
+            const presetList = document.getElementById('presetList');
+            presetList.innerHTML = ''; // Clear the preset list before populating
+
+            // Extract existing presets from the server data
+            const existingPresets = selectedCamera.presets;
+
+            // Compare existing presets with the new presets fetched from Twitch chat
+            const newPresets = compareSyncPresets(existingPresets, fetchedPresets);
+
+            // Hide the current table
+            const currentTable = document.getElementById('presetTable');
+            currentTable.style.display = 'none';
+            // Hide custom preset list
+            const customPresetList = document.getElementById('customPresetTable');
+            customPresetList.style.display = 'none';
+            // Hide buttons
+            const addButton = document.querySelector('.btn-add-preset');
+            const addCustomButton = document.querySelector('.btn-add-custom-preset');
+            const syncButton = document.querySelector('.btn-sync-preset');
+            addButton.style.display = 'none';
+            addCustomButton.style.display = 'none';
+            syncButton.style.display = 'none';
+
+            // Create a new table for the new presets
+            const newPresetTable = document.createElement('table');
+            newPresetTable.id = 'newPresetTable';
+            newPresetTable.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Preset Name</th>
+                        <th>Select</th>
+                    </tr>
+                </thead>
+                <tbody id="newPresetList">
+                    <!-- New presets for the selected camera will be dynamically populated here -->
+                </tbody>
+            `;
+            const mainContent = document.getElementById('mainContent');
+            mainContent.appendChild(newPresetTable);
+
+            const newPresetList = document.getElementById('newPresetList');
+
+            // Populate the new table with the new presets
+            newPresets.forEach((preset, index) => {
+                const newIndex = index + 1; // Start numbering from 1 for the new presets
+                const row = createSyncPresetRow(newIndex, preset, cameraName);
+                newPresetList.appendChild(row);
+            });
+
+            // Add "Add new presets" button
+            const addPresetsButton = document.createElement('button');
+            addPresetsButton.textContent = 'Add new presets';
+	    addPresetsButton.classList.add('btn-add-presets'); // Add the class to the button
+            addPresetsButton.addEventListener('click', () => {
+                // Get all selected presets
+                const selectedPresets = Array.from(document.querySelectorAll('#newPresetTable input[type="checkbox"]:checked'))
+                    .map(checkbox => checkbox.value); // Use value instead of dataset.preset
+
+                // Send selected presets to the server for addition
+                fetch('/add-sync-presets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        cameraName: selectedCamera.name,
+                        newPresets: selectedPresets
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to add new presets');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    console.log('New presets added successfully:', data);
+                    // You can perform additional actions here, such as updating the UI
+                   window.location.reload();
+                })
+                .catch(error => {
+                    console.error('Error adding new presets:', error);
+                    // Handle the error, e.g., display an error message to the user
+                });
+            });
+
+            mainContent.appendChild(addPresetsButton);
+        })
+        .catch(error => {
+            console.error('Error fetching presets:', error);
+            // Handle the error, e.g., display an error message to the user
+        });
+}
+
+
+function createSyncPresetRow(index, preset) {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${index}</td>
+        <td>${preset}</td>
+        <td><input type="checkbox" name="presetCheckbox" value="${preset}"></td>
+    `;
+    return row;
+}
+
+function compareSyncPresets(existingPresets, newPresets) {
+    return newPresets.filter(preset => !existingPresets.includes(preset.trim()));
+}
+
+
+let isNewPreset = true; // Initially set isNewPreset to true for creating a new preset
+
+function editCustomPreset(cameraName, presetName) {
+            showCustomPresetInputs(cameraName);
+            populateCustomPresetInputs(presetName);
+            isNewPreset = false; // Set isNewPreset flag to false for editing existing preset
+            originalPresetName = presetName; // Store the original preset name
+}
+
+
+function showCustomPresetInputs(cameraName) {
+    const presetList = document.getElementById('presetList');
+    const presetNames = Array.from(presetList.querySelectorAll('.preset-name')).map(preset => preset.textContent);
+    originalPresetName = ''; // Store the original preset name
+    const mainContent = document.getElementById('mainContent');
+    isNewPreset = true;
+    mainContent.innerHTML = `
+        <div id="customPresetInputs">
+            <label for="presetName">Preset Name:</label>
+            <input type="text" id="presetName"><br>
+            <label for="presetSelect">Select Existing Preset:</label>
+            <select id="presetSelect">
+                <option value="">Select Preset</option>
+                ${presetNames.map(preset => `<option value="${preset}">${preset}</option>`).join('')}
+            </select><br>
+            <label>Pan Tilt Zoom:</label><br>
+            <label for="pan">Pan:</label>
+            <input type="number" id="pan"><br>
+            <label for="tilt">Tilt:</label>
+            <input type="number" id="tilt"><br>
+            <label for="zoom">Zoom:</label>
+            <input type="number" id="zoom"><br>
+            <button onclick="saveCustomPreset('${cameraName}')">Save</button>
+        </div>
+    `;
+}
+
+function saveCustomPreset(cameraName) {
+    const presetName = document.getElementById('presetName').value;
+    const selectedPreset = document.getElementById('presetSelect').value; // Getting the selected preset
+    const pan = document.getElementById('pan').value;
+    const tilt = document.getElementById('tilt').value;
+    const zoom = document.getElementById('zoom').value;
+    console.log('Saving Preset Data:', { cameraName, selectedPreset, presetName, pan, tilt, zoom }); // Log data to be saved
+    const payload = {
+        cameraName: cameraName,
+        selectedPreset: selectedPreset, // Include the selected preset in the payload
+        presetName: presetName,
+        pan: pan,
+        tilt: tilt,
+        zoom: zoom,
+        isNewPreset: isNewPreset,
+        originalPresetName: originalPresetName // Include the original preset name
+    };
+
+    fetch('/save-custom-preset', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to save custom preset');
+        }
+        console.log('Custom preset saved successfully');
+        // Optionally, perform additional actions after successful save
+        fetchAndPopulatePresets(cameraName); // Re-populate presets
+        // Reset input fields
+        document.getElementById('presetName').value = '';
+        document.getElementById('pan').value = '';
+        document.getElementById('tilt').value = '';
+        document.getElementById('zoom').value = '';
+        showCameraDetails(cameraName); // Show camera details again, which includes preset pad
+    })
+    .catch(error => {
+        console.error('Error saving custom preset:', error);
+        // Optionally, handle error or provide feedback to the user
+    });
+}
+
+function deleteCustomPreset(cameraName, presetName) {
+    // Display a confirmation dialog
+    if (confirm(`Are you sure you want to delete the custom preset "${presetName}"?`)) {
+        // If the user confirms, send an HTTP request to the server to delete the preset
+        fetch('/delete-custom-preset', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ cameraName: cameraName, presetName: presetName })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to delete custom preset');
+            }
+            console.log('Custom preset deleted successfully');
+            // Optionally, perform additional actions after successful deletion
+            showCameraDetails(cameraName); // Show camera details again, which includes preset pad
+
+        })
+        .catch(error => {
+            console.error('Error deleting custom preset:', error);
+            // Optionally, handle error or provide feedback to the user
+        });
+    }
 }
 
 
@@ -592,5 +995,41 @@ function moveCameraTo(cameraName) {
     .catch(error => {
         console.error('Error moving camera to line number:', error);
     });
+}
+
+let dialog = null;
+
+function showDialog(text) {
+    // Create dialog container
+    const dialogContainer = document.createElement('div');
+    dialogContainer.classList.add('dialog-container');
+
+    // Create dialog box
+    const dialogBox = document.createElement('div');
+    dialogBox.classList.add('dialog-box');
+
+    // Create dialog text
+    const dialogText = document.createElement('p');
+    dialogText.classList.add('dialog-text'); // Add dialog text class
+    dialogText.textContent = text;
+
+    // Append dialog text to dialog box
+    dialogBox.appendChild(dialogText);
+
+    // Append dialog box to dialog container
+    dialogContainer.appendChild(dialogBox);
+
+    // Append dialog container to the body
+    document.body.appendChild(dialogContainer);
+
+    // Store reference to dialog
+    dialog = dialogContainer;
+}
+
+function closeDialog() {
+    if (dialog) {
+        dialog.remove(); // Remove dialog from the DOM
+        dialog = null; // Reset dialog reference
+    }
 }
 

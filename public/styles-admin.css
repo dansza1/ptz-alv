@@ -1,6 +1,29 @@
-.ccontainer {
+body {
+    font-family: Arial, sans-serif;
+    background-color: #303030; /* Dark background color */
+    color: #ffffff; /* White text color */
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-ptsans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+}
+.heading-container {
+    position: relative; /* Ensure relative positioning for absolute child */
+    background-color: black; /* Change the background color as needed */
+    color: #fff; /* Change the text color as needed */
+    height: 60px;
     display: flex;
-    height: 100vh;
+    box-shadow: 5px 0px 10px rgba(0, 0, 0, 0.3); /* Add shadow on the right side */
+}
+
+.logo {
+    margin-right: -10px; /* Adjust spacing between logo and text */
+    margin-left: 10px; /* Adjust spacing between logo and text */
+}
+
+.logo img {
+    width: 50px; /* Adjust width of the logo image */
+    height: auto; /* Maintain aspect ratio */
 }
 
 .camera-heading {
@@ -29,13 +52,6 @@
     flex-direction: column;
 }
 
-body {
-    font-family: Arial, sans-serif;
-    background-color: #444444; /* Dark background color */
-    color: #ffffff; /* White text color */
-    margin: 0;
-    padding: 0;
-}
 
 .settings-container {
     float: right;
@@ -108,17 +124,20 @@ body {
 .admin-icon {
     width: 20px; /* Adjust as needed */
     height: 20px; /* Adjust as needed */
-    margin-left: 10px; /* Adjust as needed */
+    margin-left: 5px; /* Adjust as needed */
     position: relative;
-    top: 3px;
+    top: 4px;
 }
 
 .ptz-heading {
     text-align: left;
     margin-left: 20px;
     font-size: 18px;
-    margin-bottom: -10px;
+    margin-top: 15px;
+    position: relative; /* Ensure proper positioning */
+    z-index: 3; /* Set a higher z-index value to display it on top */
 }
+
 .main-content-box {
     background-color: #222222; /* Dark grey background color */
     color: #fff; /* White text color */
@@ -314,6 +333,67 @@ body {
     background-color: #5A5A5A;
 }
 
+#customPresetTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#customPresetTable th, #customPresetTable td {
+    border: 1px solid #808080; 
+    padding: 8px;
+    text-align: left;
+}   
+
+#customPresetTable th {
+    background-color: #5A5A5A;
+} 
+
+#newPresetTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#newPresetTable th, #newPresetTable td {
+    border: 1px solid #808080;
+    padding: 8px;
+    text-align: left;
+}
+
+#newPresetTable th {
+    background-color: #5A5A5A;
+}
+
+.dialog-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Ensure the dialog appears above other elements */
+}
+
+.dialog-box {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    height: 100px; /* Set the desired height */
+    width: 300px; /* Set the desired height */
+}
+
+/* Style for the dialog text */
+.dialog-text {
+    font-size: 16px;
+    color: black;
+    margin: 0;
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    height: 100%; /* Ensure the text fills the entire height of the dialog box */
+}
 
 .preset-name {
     font-size: 16px;
@@ -379,7 +459,7 @@ body {
 }
 
 /* Style for Add New Preset button */
-.btn-add-preset {
+.btn-add-preset, .btn-add-custom-preset, .btn-sync-preset{
     background-color: #28a745;
     color: #fff;
     border: none;
@@ -401,8 +481,22 @@ body {
     margin-bottom: 5px;
 }   
 
+.btn-add-presets {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 20px;
+    margin-bottom: 5px;
+}
 
-.btn-add-preset:hover {
+.btn-add-preset:hover, .btn-sync-preset:hover {
+    background-color: #218838;
+}
+
+.btn-add-custom-preset:hover {
     background-color: #218838;
 }
 

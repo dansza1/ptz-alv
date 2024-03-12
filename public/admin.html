@@ -3,21 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twitch Chat Commands</title>
+    <title>Alveus PTZ Config</title>
     <!-- Cache-busting query parameter added to stylesheet -->
+    <link rel="icon" type="image/x-icon" href="./img/favicon.ico">
     <link rel="stylesheet" type="text/css" href="styles-admin.css?v=1">
 </head>
 
 <body>
-<h1 class="ptz-heading">
-    Alveus PTZ Control
-    <a href="index.html">
-        <img src="settings.png" alt="Admin Settings" class="admin-icon">
-    </a>
-</h1>
+  <div class="heading-container">
+    <div class="logo">
+        <img src="/img/logo.webp" alt="Logo">
+    </div>
+    <h1 class="ptz-heading">
+        Alveus PTZ 
+        <a href="index.html">
+            <img src="/img/settings.png" alt="Admin Settings" class="admin-icon">
+        </a>
+    </h1>
+</div>
 
-
-    <!-- Main container for direction-pad and preset-pad -->
     <div class="container">
         <div class="direction-and-ptz-container">
             <!-- Container for camera buttons -->
@@ -25,19 +29,19 @@
             <div class="camera-container" id="currentCameraList"></div>
             <div class="sidebar">
                 <ul>
-                    <!-- Twitch Settings menu item (moved to the top) -->
-   <li><a href="#" id="twitchSettingsLink" onclick="showTwitchSettings()" class="menu-item">Twitch Settings</a></li>
-    <li><a href="#" id="manageCamerasLink" onclick="showCamera()" class="menu-item">Manage Cameras</a></li>
+                    <li><a href="#" id="twitchSettingsLink" onclick="showTwitchSettings()" class="menu-item">Twitch Settings</a></li>
+                    <li><a href="#" id="manageCamerasLink" onclick="showCamera()" class="menu-item">Manage Cameras</a></li>
                 </ul>
             </div>
         </div>
+        <!-- Container for preset buttons -->
         <div class="preset-container">
             <h2 class="label-preset">Presets</h2>
-            <div id="mainContent" class="main-content-box"></div> <!-- Add CSS class here -->
+            <div id="mainContent" class="main-content-box">
+	    </div> 
         </div>
     </div>
 
-    <!-- Cache-busting query parameter added to JavaScript file -->
     <script src="admin.js?v=1"></script>
 </body>
 </html>
