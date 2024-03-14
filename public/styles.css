@@ -247,7 +247,7 @@ body {
         margin-top: 58px;
         width: 250px;
         max-height: 699px; /* Adjust the value as needed */
-        min-height: 250px; /* Adjust the value as needed */
+        min-height: 150px; /* Adjust the value as needed */
         overflow-y: auto;
         grid-auto-rows: 50px;
     }
@@ -423,7 +423,7 @@ body {
         margin-top: 58px;
         max-width: 600px; /* Adjust the value as needed */
         max-height: 699px; /* Adjust the value as needed */
-        min-height: 250px; /* Adjust the value as needed */
+        min-height: 150px; /* Adjust the value as needed */
         min-width: 250px; /* Adjust the value as needed */
         overflow-y: auto;
         grid-auto-rows: 50px;
