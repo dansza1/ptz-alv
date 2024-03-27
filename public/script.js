@@ -6,6 +6,16 @@ window.onload = function() {
 
 };
 
+// Check if the thumbnailCheckbox setting exists in local storage
+if (localStorage.getItem('thumbnailVisibility') === null) {
+    // If not, initialize it with a default value of true
+    localStorage.setItem('thumbnailVisibility', 'true');
+}
+
+if (localStorage.getItem('arrowKeyCheckboxState') === null) {
+    // If not, initialize it with a default value of true
+    localStorage.setItem('arrowKeyCheckboxState', 'true');
+}
 
 
 // Function to update thumbnail visibility based on checkbox state for grid layout
@@ -221,19 +231,9 @@ function populatePresetPad(presets) {
         presetPad.appendChild(container);
 
         // Update thumbnail visibility and button height based on checkbox state
-        updateThumbnailVisibilityForElement(image, thumbnailCheckboxChecked);
-        updateButtonHeightForElement(button, thumbnailCheckboxChecked);
+        updateThumbnailVisibility(thumbnailCheckboxChecked);
+        updateButtonHeight(thumbnailCheckboxChecked);
     });
-}
-
-// Function to update thumbnail visibility based on checkbox state for a specific element
-function updateThumbnailVisibilityForElement(element, isChecked) {
-    element.style.display = isChecked ? 'block' : 'none';
-}
-
-// Function to update button height based on checkbox state for a specific element
-function updateButtonHeightForElement(element, isChecked) {
-    element.style.height = isChecked ? '30px' : '60px';
 }
 
 
@@ -313,20 +313,10 @@ function populateCustomPresetPad(customPresets) {
         customPresetPad.appendChild(container);
 
         // Update thumbnail visibility and button height based on checkbox state
-        updateThumbnailVisibilityForElement(image, thumbnailCheckboxChecked);
-        updateButtonHeightForElement(button, thumbnailCheckboxChecked);
+        updateThumbnailVisibility(thumbnailCheckboxChecked);
+        updateButtonHeight(thumbnailCheckboxChecked);
     });
     toggleCustomPresetContainerVisibility();
-}
-
-// Function to update thumbnail visibility based on checkbox state for a specific element
-function updateThumbnailVisibilityForElement(element, isChecked) {
-    element.style.display = isChecked ? 'block' : 'none';
-}
-
-// Function to update button height based on checkbox state for a specific element
-function updateButtonHeightForElement(element, isChecked) {
-    element.style.height = isChecked ? '30px' : '60px';
 }
 
 
