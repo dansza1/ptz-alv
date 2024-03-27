@@ -132,6 +132,96 @@ function showTwitchSettings() {
     fetchTwitchSettings();
 }
 
+function showInterfaceSettings() {
+
+    const activeMenuItem = document.querySelector('.menu-item.active');
+    if (activeMenuItem) {
+        activeMenuItem.classList.remove('active');
+    }
+
+    // Add 'active' class to Twitch Settings menu item
+    document.getElementById('interfaceSettingsLink').classList.add('active');
+
+    // Create the Twitch Settings form HTML
+    const interfaceSettingsForm = document.createElement('div');
+    interfaceSettingsForm.id = 'interfaceSettingsForm';
+    interfaceSettingsForm.classList.add('settings-form');
+    interfaceSettingsForm.style.display = 'block';
+
+    interfaceSettingsForm.innerHTML = `
+        <h2>Interface Settings</h2>
+        <table class="settings-table">
+            <tr>
+                <td><label class="field-label">Show grid Thumbnails</label></td>
+                <td>
+                <input type="checkbox" class="edit-checkbox" id="thumbnailCheckbox" checked>
+                </td>
+            </tr>
+             <tr>
+                <td><label class="field-label">Enable Direction-pad Arrow keys</label></td>
+                <td>
+                <input type="checkbox" class="edit-checkbox" id="arrowKeyCheckbox" checked>
+                </td>
+            </tr>
+        </table>
+    `;
+
+    // Append the Twitch Settings form to the mainContent container
+    const mainContentContainer = document.getElementById('mainContent');
+    mainContentContainer.innerHTML = '';
+    mainContentContainer.appendChild(interfaceSettingsForm);
+
+}
+
+document.getElementById('interfaceSettingsLink').addEventListener('click', function(event) {
+    event.preventDefault(); // Prevent default link behavior
+
+    // Ensure the checkbox element is created in the DOM
+    const thumbnailCheckbox = document.getElementById('thumbnailCheckbox');
+    if (thumbnailCheckbox) {
+        // Function to save the checkbox state to localStorage
+        const saveCheckboxState = () => {
+            localStorage.setItem('thumbnailVisibility', thumbnailCheckbox.checked);
+        };
+
+        // Check if there is a previous selection stored in localStorage
+        const savedThumbnailVisibility = localStorage.getItem('thumbnailVisibility');
+        if (savedThumbnailVisibility !== null) {
+            thumbnailCheckbox.checked = savedThumbnailVisibility === 'true'; // Set checkbox state based on saved value
+        }
+
+        // Save checkbox state to localStorage when clicked
+        thumbnailCheckbox.addEventListener('change', saveCheckboxState);
+    } else {
+        console.error('Thumbnail checkbox element not found.');
+    }
+});
+
+document.getElementById('interfaceSettingsLink').addEventListener('click', function(event) {
+    event.preventDefault(); // Prevent default link behavior
+
+    // Ensure the checkbox element is created in the DOM
+    const arrowKeyCheckbox = document.getElementById('arrowKeyCheckbox');
+    if (arrowKeyCheckbox) {
+        // Function to save the checkbox state to localStorage
+        const saveCheckboxState = () => {
+            localStorage.setItem('arrowKeyCheckboxState', arrowKeyCheckbox.checked);
+        };
+
+        // Check if there is a previous selection stored in localStorage
+        const savedCheckboxState = localStorage.getItem('arrowKeyCheckboxState');
+        if (savedCheckboxState !== null) {
+            arrowKeyCheckbox.checked = savedCheckboxState === 'true'; // Set checkbox state based on saved value
+        }
+
+        // Save checkbox state to localStorage when clicked
+        arrowKeyCheckbox.addEventListener('change', saveCheckboxState);
+    } else {
+        console.error('Arrow key checkbox element not found.');
+    }
+});
+
+
 
 // Left Menu with list of Cameras
 function populateCurrentCameras() {
@@ -393,6 +483,8 @@ function fetchAndPopulateCustomPresets(cameraName) {
                     <td>
                         <button class="btn-edit" onclick="editCustomPreset('${cameraName}', '${preset.presetName}')">Edit</button>
                         <button class="btn-delete" onclick="deleteCustomPreset('${cameraName}', '${preset.presetName}')">Delete</button>
+		        <input type="number" class="move-to-input" placeholder="Enter line number">
+                        <button class="btn-move-to-custom" onclick="moveCustomPresetTo('${cameraName}', '${index}')">Move To</button>
                     </td>
                 `;
                 customPresetList.appendChild(row);
@@ -752,6 +844,61 @@ function deleteCustomPreset(cameraName, presetName) {
             // Optionally, handle error or provide feedback to the user
         });
     }
+}
+
+function updateCustomPresetOrder(cameraName) {
+    const customPresetList = document.getElementById('customPresetList');
+    const customPresets = customPresetList.getElementsByTagName('tr');
+
+    // Extract preset names in the new order
+    const updatedCustomPresets = Array.from(customPresets).map(preset => {
+        return preset.querySelector('.preset-name').innerText;
+    });
+
+    // Log the extracted presets to verify
+    console.log('Updated Custom Presets:', updatedCustomPresets);
+
+    // Update the JSON data with the new order
+    fetch('/update-custom-preset-order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ presetNames: updatedCustomPresets }), // Ensure presetNames matches the server-side expectation
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to update custom preset order');
+        }
+        console.log('Custom preset order updated successfully');
+        // Additional logic if needed
+
+        sessionStorage.setItem('currentCameraName', cameraName);
+        reloadCameraDetails(); // Reload the camera details view after successful update
+    })
+    .catch(error => {
+        console.error('Error updating custom preset order:', error);
+    });
+}
+
+function moveCustomPresetTo(cameraName, presetId) {
+    const customPresetList = document.getElementById('customPresetList');
+    const customPresets = customPresetList.getElementsByTagName('tr');
+    const moveToInput = customPresets[presetId].querySelector('.move-to-input');
+    const lineNumber = parseInt(moveToInput.value);
+
+    if (isNaN(lineNumber) || lineNumber < 1 || lineNumber > customPresets.length) {
+        console.error('Invalid line number:', lineNumber);
+        return;
+    }
+
+    // Insert the current preset at the specified line number
+    const currentPreset = customPresets[presetId];
+    const targetPreset = customPresets[lineNumber - 1];
+    customPresetList.insertBefore(currentPreset, targetPreset);
+
+    // Update the custom preset order
+    updateCustomPresetOrder(cameraName);
 }
 
 

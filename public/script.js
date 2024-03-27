@@ -3,30 +3,27 @@ let camerasData = null; // Initialize variable to store camera data
 
 window.onload = function() {
     fetchCameraDataAndPopulateUI(); // Fetch camera data and populate UI
+
 };
 
 
-function toggleDirectionPad(selector) {
-    console.log('Function called with selector:', selector);
-    const directionPad = document.querySelector(selector);
-    if (directionPad) {
-        directionPad.classList.toggle('collapsed');
-    } else {
-        console.log('Element not found with selector:', selector);
-    }
-}
 
-function animateButton(button) {
-    // Apply scale transformation to shrink the button
-    button.style.transform = 'scale(0.9)';
+// Function to update thumbnail visibility based on checkbox state for grid layout
+const updateThumbnailVisibility = (isChecked) => {
+    const thumbnails = document.querySelectorAll('.grid-layout .preset-image, .grid-layout .custom-preset-image');
+    thumbnails.forEach(thumbnail => {
+        thumbnail.style.display = isChecked ? 'block' : 'none'; // Show/hide thumbnails based on checkbox state
+    });
+};
 
-    // Reset the scale after a short delay
-    setTimeout(() => {
-        button.style.transform = 'scale(1)';
-    }, 100);
-}
+// Function to update button height based on checkbox state for grid layout
+const updateButtonHeight = (isChecked) => {
+    const buttons = document.querySelectorAll('.grid-layout .preset-button, .grid-layout .custom-preset-button');
+    buttons.forEach(button => {
+        button.style.height = isChecked ? '30px' : '60px'; // Adjust height based on checkbox state
+    });
+};
 
-// Event Listener to switch between Grid and List views
 document.addEventListener('DOMContentLoaded', function() {
     const gridIcon = document.getElementById('gridIcon');
     const listIcon = document.getElementById('listIcon');
@@ -39,24 +36,56 @@ document.addEventListener('DOMContentLoaded', function() {
         listIcon.classList.remove('active-icon');
     };
 
-    gridIcon.addEventListener('click', () => {
+    // Function to switch to grid view
+    const switchToGridView = () => {
         removeActiveClassFromIcons(); // Remove active class from all icons
         gridIcon.classList.add('active-icon'); // Add active class to grid icon
         presetContainer.classList.remove('list-layout');
         presetContainer.classList.add('grid-layout');
         customPresetContainer.classList.remove('list-layout');
         customPresetContainer.classList.add('grid-layout');
-    });     
-                
-    listIcon.addEventListener('click', () => {
+        localStorage.setItem('viewMode', 'grid'); // Save the selection to localStorage
+
+        // Retrieve the checkbox state from localStorage
+        const thumbnailCheckboxState = localStorage.getItem('thumbnailVisibility');
+        const thumbnailCheckboxChecked = thumbnailCheckboxState === 'true';
+
+        // Use the checkbox state to determine visibility and button height
+        updateThumbnailVisibility(thumbnailCheckboxChecked);
+        updateButtonHeight(thumbnailCheckboxChecked);
+    };
+
+    // Function to switch to list view
+    const switchToListView = () => {
         removeActiveClassFromIcons(); // Remove active class from all icons
         listIcon.classList.add('active-icon'); // Add active class to list icon
         presetContainer.classList.remove('grid-layout');
         presetContainer.classList.add('list-layout');
         customPresetContainer.classList.remove('grid-layout');
         customPresetContainer.classList.add('list-layout');
-    });         
-});  
+        localStorage.setItem('viewMode', 'list'); // Save the selection to localStorage
+
+        // Always hide thumbnails in list view
+        const thumbnails = document.querySelectorAll('.preset-image, .custom-preset-image');
+        thumbnails.forEach(thumbnail => {
+            thumbnail.style.display = 'none';
+        });
+    };
+
+    // Check if there is a previous selection stored in localStorage
+    const savedViewMode = localStorage.getItem('viewMode');
+    if (savedViewMode === 'grid') {
+        switchToGridView();
+    } else if (savedViewMode === 'list') {
+        switchToListView();
+    }
+
+    gridIcon.addEventListener('click', switchToGridView);
+    listIcon.addEventListener('click', switchToListView);
+});
+
+
+
 
 
 function toggleCustomPresetContainerVisibility() {
@@ -83,9 +112,11 @@ function fetchCameraDataAndPopulateUI() {
             } else {
                 selectCamera(camerasData.cameras[0].name); // Select the first camera by default
             }
-        })
+            
+    })
         .catch(error => console.error('Error fetching camera data:', error));
-}
+
+    }
 
 function populateCameraButtons(cameras) {
     const cameraContainer = document.querySelector('.camera-container');
@@ -105,7 +136,7 @@ function selectCamera(cameraName) {
     populatePresetPad(selectedCameraData.presets); // Populate preset pad with presets for the selected camera
     fetchAndPopulateCustomPresets(cameraName);
     adjustLayout(); // Adjust layout based on the number of items
-    highlightSelectedCameraButton();
+    highlightSelectedCameraButton();    
 }
 
 function populateDropdowns(cameras) {
@@ -137,16 +168,17 @@ function populateDropdowns(cameras) {
     });
 }
 
-
 function populatePresetPad(presets) {
     const presetPad = document.getElementById('presetPad');
     presetPad.innerHTML = ''; // Clear previous preset buttons
+
+    const thumbnailCheckboxState = localStorage.getItem('thumbnailVisibility');
+    const thumbnailCheckboxChecked = thumbnailCheckboxState === 'true';
 
     presets.forEach(preset => {
         // Create container for image-button pair
         const container = document.createElement('div');
         container.classList.add('preset-button-container');
-
 
         // Create image element
         const image = document.createElement('img');
@@ -154,21 +186,19 @@ function populatePresetPad(presets) {
         image.src = `./button-img/${selectedCamera}/${preset}.png`;
         image.classList.add('preset-image');
 
-	image.onerror = function() {
-    	// Set the source to the home image if the preset image fails to load
-    	this.src = `./button-img/${selectedCamera}/home.png`;
-        this.style.backgroundColor = '#222222'; // Replace 'your-color' with the desired color
-        this.style.filter = 'blur(3px)'; // Apply a blur effect
-    	// If the home image also fails to load, set a default image source
-    	this.onerror = function() {
+        image.onerror = function() {
+            // Set the source to the home image if the preset image fails to load
+            this.src = `./button-img/${selectedCamera}/home.png`;
+            this.style.backgroundColor = '#222222'; // Replace 'your-color' with the desired color
+            this.style.filter = 'blur(3px)'; // Apply a blur effect
+            // If the home image also fails to load, set a default image source
+            this.onerror = function() {
                 this.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
                 this.style.backgroundColor = '#222222'; // Replace 'your-color' with the desired color
-    		this.style.borderTopLeftRadius = '15px'; // Adjust the radius for the top-left corner
-	        this.style.borderTopRightRadius = '15px'; // Adjust the radius for the top-right corner
-
-    		};
-	};
-
+                this.style.borderTopLeftRadius = '15px'; // Adjust the radius for the top-left corner
+                this.style.borderTopRightRadius = '15px'; // Adjust the radius for the top-right corner
+            };
+        };
 
         // Create button element
         const button = document.createElement('button');
@@ -189,7 +219,21 @@ function populatePresetPad(presets) {
         container.appendChild(button);
         // Append container to preset pad
         presetPad.appendChild(container);
+
+        // Update thumbnail visibility and button height based on checkbox state
+        updateThumbnailVisibilityForElement(image, thumbnailCheckboxChecked);
+        updateButtonHeightForElement(button, thumbnailCheckboxChecked);
     });
+}
+
+// Function to update thumbnail visibility based on checkbox state for a specific element
+function updateThumbnailVisibilityForElement(element, isChecked) {
+    element.style.display = isChecked ? 'block' : 'none';
+}
+
+// Function to update button height based on checkbox state for a specific element
+function updateButtonHeightForElement(element, isChecked) {
+    element.style.height = isChecked ? '30px' : '60px';
 }
 
 
@@ -215,15 +259,20 @@ function fetchAndPopulateCustomPresets(cameraName) {
     fetchCustomPresets(cameraName)
         .then(customPresets => {
             populateCustomPresetPad(customPresets); // Pass filtered custom presets
+                // Retrieve the checkbox state from localStorage
         })
         .catch(error => {
             console.error('Error fetching custom presets:', error);
         });
 }
 
+
 function populateCustomPresetPad(customPresets) {
     const customPresetPad = document.getElementById('customPresetPad');
     customPresetPad.innerHTML = ''; // Clear previous custom preset buttons
+
+    const thumbnailCheckboxState = localStorage.getItem('thumbnailVisibility');
+    const thumbnailCheckboxChecked = thumbnailCheckboxState === 'true';
 
     customPresets.forEach(customPreset => {
         // Create container for image-button pair
@@ -233,19 +282,18 @@ function populateCustomPresetPad(customPresets) {
         // Create image element
         const image = document.createElement('img');
 
-    image.onerror = function() {
-        // Set the source to the home image if the preset image fails to load
-        this.src = `./button-img/${selectedCamera}/home.png`;
-        this.style.backgroundColor = '#222222'; // Replace 'your-color' with the desired color
-        this.style.filter = 'blur(3px)'; // Apply a blur effect
-        // If the home image also fails to load, set a default image source
-        this.onerror = function() {
+        image.onerror = function() {
+            // Set the source to the home image if the preset image fails to load
+            this.src = `./button-img/${selectedCamera}/home.png`;
+            this.style.backgroundColor = '#222222'; // Replace 'your-color' with the desired color
+            this.style.filter = 'blur(3px)'; // Apply a blur effect
+            // If the home image also fails to load, set a default image source
+            this.onerror = function() {
                 this.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
                 this.style.backgroundColor = '#222222'; // Replace 'your-color' with the desired color
                 this.style.borderTopLeftRadius = '15px'; // Adjust the radius for the top-left corner
                 this.style.borderTopRightRadius = '15px'; // Adjust the radius for the top-right corner
-
-                };
+            };
         };
 
         image.src = `./button-img/${selectedCamera}/${customPreset.presetName}.png`;
@@ -263,10 +311,23 @@ function populateCustomPresetPad(customPresets) {
 
         // Append container to custom preset pad
         customPresetPad.appendChild(container);
+
+        // Update thumbnail visibility and button height based on checkbox state
+        updateThumbnailVisibilityForElement(image, thumbnailCheckboxChecked);
+        updateButtonHeightForElement(button, thumbnailCheckboxChecked);
     });
     toggleCustomPresetContainerVisibility();
 }
 
+// Function to update thumbnail visibility based on checkbox state for a specific element
+function updateThumbnailVisibilityForElement(element, isChecked) {
+    element.style.display = isChecked ? 'block' : 'none';
+}
+
+// Function to update button height based on checkbox state for a specific element
+function updateButtonHeightForElement(element, isChecked) {
+    element.style.height = isChecked ? '30px' : '60px';
+}
 
 
 function sendCustomCommand(cameraName, presetName, customPresets) {
@@ -308,7 +369,7 @@ function sendCustomCommand(cameraName, presetName, customPresets) {
         // After a slight delay, send the set command
         setTimeout(() => {
             sendSetCommand(setCommand);
-        }, 1500); // Adjust the delay time (in milliseconds) as needed
+        }, 1800); // Adjust the delay time (in milliseconds) as needed
     })
     .catch(error => {
         console.error('Error sending load command:', error);
@@ -632,5 +693,183 @@ function adjustLayout() {
         console.error("An error occurred in adjustLayout:", error.message);
     }
 }
+
+// Function to handle key down events
+function handleKeyDown(event) {
+    // Check if the arrow key checkbox state is stored in local storage
+    const savedArrowKeyCheckboxState = localStorage.getItem('arrowKeyCheckboxState');
+    if (savedArrowKeyCheckboxState !== 'true') {
+        return; // Exit the function if checkbox is not checked (or if the state is not found in local storage)
+    }
+
+    // Check if the pressed key is an arrow key
+    switch (event.key) {
+        case 'ArrowUp':
+        case 'ArrowDown':
+        case 'ArrowLeft':
+        case 'ArrowRight':
+            // Check if the target element is an input box or textarea
+            if (event.target.tagName.toLowerCase() === 'input' || event.target.tagName.toLowerCase() === 'textarea') {
+                // Allow default behavior of arrow keys inside input boxes and textareas
+                return;
+            }
+            event.preventDefault(); // Prevent default only for arrow keys outside input boxes and textareas
+            break;
+        default:
+            break;
+    }
+
+    // Execute sendDirectionCommand based on the pressed arrow key
+    switch (event.key) {
+        case 'ArrowUp':
+            sendDirectionCommand('up');
+            break;
+        case 'ArrowDown':
+            sendDirectionCommand('down');
+            break;
+        case 'ArrowLeft':
+            sendDirectionCommand('left');
+            break;
+        case 'ArrowRight':
+            sendDirectionCommand('right');
+            break;
+        default:
+            break;
+    }
+}
+
+// Add event listener for keydown event on document
+document.addEventListener('keydown', handleKeyDown);
+
+
+function updatePanTiltZoom() {
+    const sliderValue = parseInt(document.getElementById('speedSlider').value);
+    const panInput = document.getElementById('panInput');
+    const tiltInput = document.getElementById('tiltInput');
+    const zoomInput = document.getElementById('zoomInput');
+    
+    // Update input values based on slider position
+    panInput.value = sliderValue;
+    tiltInput.value = sliderValue;
+    zoomInput.value = sliderValue;
+
+    // Call the sendPanTiltZoom function to send the updated values
+    sendPanTiltZoom();
+}
+
+
+function sendPanTiltZoom() {
+    const pan = document.getElementById('panInput').value || '0';
+    const tilt = document.getElementById('tiltInput').value || '0';
+    const zoom = document.getElementById('zoomInput').value || '0';
+    const command = `!ptzset ${selectedCamera.toLowerCase()} ${pan} ${tilt} ${zoom}`;
+    fetch('/send-command', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ command })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to send command');
+        }
+        return response.text(); // Extract the text response from the server
+    })
+    .then(message => {
+        console.log(message); // Log the message to the console
+        // Optionally, display the message on the UI
+    })
+    .catch(error => {
+        console.error('Error sending command:', error);
+        // Optionally, display an error message on the UI
+    });
+
+    // Clear the input values
+    document.getElementById('panInput').value = '';
+    document.getElementById('tiltInput').value = '';
+    document.getElementById('zoomInput').value = '';
+}
+
+
+
+
+// Get the button element
+const button = document.getElementById('sliderValueLabel');
+
+// PanTilt middle button
+const values = ['1', '3', '6', '9']; // Define the three values
+let currentIndex = 0; // Initialize the index to 0
+
+function toggleValues() {
+    currentIndex = (currentIndex + 1) % values.length; // Increment index and loop back to 0 if it exceeds the array length
+    document.getElementById('sliderValueLabel').textContent = values[currentIndex]; // Update the button label with the new value
+}
+
+function sendptzpadCommand(direction) {
+    const sliderValue = document.getElementById('sliderValueLabel').textContent; // Get the current value assigned to the button
+    let pan = 0;
+    let tilt = 0;
+
+    // Determine the pan and tilt values based on the direction
+    switch (direction) {
+        case 'left':
+            pan = -sliderValue;
+            break;
+        case 'right':
+            pan = sliderValue;
+            break;
+        case 'up':
+            tilt = sliderValue;
+            break;
+        case 'down':
+            tilt = -sliderValue;
+            break;
+        default:
+            break;
+    }
+
+    const command = `!ptzset ${selectedCamera.toLowerCase()} ${pan} ${tilt} 0`; // Construct the command string
+    fetch('/send-command', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ command })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to send command');
+        }
+        return response.text(); // Extract the text response from the server
+    })
+    .then(message => {
+        console.log(message); // Log the message to the console
+        // Optionally, display the message on the UI
+    })
+    .catch(error => {
+        console.error('Error sending command:', error);
+        // Optionally, display an error message on the UI
+    });
+}
+function togglePad(selector) {
+    const directionPads = document.querySelectorAll('.direction-pad, .pantilt-pad');
+    directionPads.forEach(pad => {
+        if (pad.classList.contains(selector.replace('.', ''))) {
+            pad.classList.remove('hidden'); // Show the pad
+        } else {
+            pad.classList.add('hidden'); // Hide the pad
+        }
+    });
+}
+
+function setActiveHeading(headingClass) {
+    const allHeadings = document.querySelectorAll('.direction-move-heading, .direction-pan-heading');
+    allHeadings.forEach(h => h.classList.remove('active'));
+
+    const headings = document.querySelectorAll(headingClass);
+    headings.forEach(h => h.classList.add('active'));
+}
+
 
 

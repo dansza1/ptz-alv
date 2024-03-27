@@ -116,7 +116,6 @@ app.post('/add-preset', (req, res) => {
 });
 
 // Endpoint to add a new camera
-// Endpoint to add a new camera
 app.post('/add-camera', (req, res) => {
     const cameraName = req.body.cameraName;
     if (!cameraName || cameraName.trim() === '') {
@@ -211,6 +210,59 @@ app.post('/update-preset-order', (req, res) => {
         });
     });
 });
+
+
+app.post('/update-custom-preset-order', (req, res) => {
+    const { presetNames } = req.body;
+    if (!presetNames || !Array.isArray(presetNames)) {
+        console.error('Invalid preset data provided');
+        return res.status(400).send('Invalid preset data provided');
+    }
+
+    // Read existing custom presets from custom-presets.json
+    fs.readFile(path.join(__dirname, 'public', 'custom-presets.json'), 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading custom presets data:', err);
+            return res.status(500).send('Error reading custom presets data');
+        }
+
+        let customPresetsData;
+        try {
+            customPresetsData = JSON.parse(data);
+        } catch (parseError) {
+            console.error('Error parsing custom presets data:', parseError);
+            return res.status(500).send('Error parsing custom presets data');
+        }
+
+        // Update the order of custom presets
+        const updatedCustomPresets = [];
+        presetNames.forEach(presetName => {
+            const existingPreset = customPresetsData.find(preset => preset.presetName === presetName);
+            if (existingPreset) {
+                updatedCustomPresets.push(existingPreset);
+            }
+        });
+
+        // Merge updated order with existing presets data
+        customPresetsData.forEach(preset => {
+            if (!presetNames.includes(preset.presetName)) {
+                updatedCustomPresets.push(preset);
+            }
+        });
+
+        // Write updated custom presets to custom-presets.json
+        fs.writeFile(path.join(__dirname, 'public', 'custom-presets.json'), JSON.stringify(updatedCustomPresets, null, 2), 'utf8', (writeErr) => {
+            if (writeErr) {
+                console.error('Error writing custom presets data:', writeErr);
+                return res.status(500).send('Error writing custom presets data');
+            }
+
+            console.log('Custom preset order updated successfully');
+            res.send('Custom preset order updated successfully');
+        });
+    });
+});
+
 
 // Endpoint to rename a preset
 app.post('/rename-preset', (req, res) => {
@@ -640,8 +692,8 @@ app.post('/send-command', (req, res) => {
 // Function to send message to Twitch chat
 function sendMessage(message) {
     // Check if the command contains !ptzmove and matches the last command
-    if (message.includes('!ptzmove') && message === lastCommand) {
-        message += " ."; // Add " ." to the end of the message
+    if ((message.includes('!ptzmove') || message.includes('!ptzset') || message.includes('!swap')) && message === lastCommand) {
+    message += " ."; // Add " ." to the end of the message
     }
     client.say(config.twitch.channel, message);
     

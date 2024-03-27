@@ -35,9 +35,13 @@
             <div class="camera-container" id="cameraContainer"></div>
 
             <!-- Direction buttons -->
-	<div class="direction-container">
-            <h2 class="direction-heading" style="cursor: pointer;" onclick="toggleDirectionPad('.direction-pad')">- Direction Pad</h2>
+        
 
+	<div class="direction-container">
+        <div class="pad-heading-container">
+            <h2 class="direction-move-heading" id="movePadHeading" style="cursor: pointer;" onclick="togglePad('.direction-pad'); setActiveHeading('.direction-move-heading');">Move</h2>
+            <h2 class="direction-pan-heading" id="panTiltPadHeading" style="cursor: pointer;" onclick="togglePad('.pantilt-pad'); setActiveHeading('.direction-pan-heading');">PanTilt</h2>
+        </div>
             <div class="direction-pad">
                 <button class="arrow-button" onclick="sendDirectionCommand('upleft')" onmousedown="animateButton(this)">↖</button>
                 <button class="arrow-button" onclick="sendDirectionCommand('up')" onmousedown="animateButton(this)">▲</button>
@@ -49,7 +53,21 @@
                 <button class="arrow-button" onclick="sendDirectionCommand('down')" onmousedown="animateButton(this)">▼</button>
                 <button class="arrow-button" onclick="sendDirectionCommand('downright')" onmousedown="animateButton(this)">↘</button>
             </div>
-	</div>
+    
+
+
+    <div class="pantilt-pad hidden">
+         <button class="arrow-button"></button>
+         <button class="ptz-arrow-button" onclick="sendptzpadCommand('up')" onmousedown="animateButton(this)">▲</button>
+         <button class="arrow-button"></button>
+         <button class="ptz-arrow-button" onclick="sendptzpadCommand('left')" onmousedown="animateButton(this)">◀</button>
+         <button class="ptz-arrow-button" id="sliderValueLabel" onclick="toggleValues()">1</button>
+         <button class="ptz-arrow-button" onclick="sendptzpadCommand('right')" onmousedown="animateButton(this)">▶</button>
+         <button class="arrow-button"></button>
+         <button class="ptz-arrow-button" onclick="sendptzpadCommand('down')" onmousedown="animateButton(this)">▼</button>
+         <button class="arrow-button"></button>
+     </div>
+        </div>
 
             <!-- PTZ input buttons -->
         <div class="direction-container">

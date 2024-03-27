@@ -114,12 +114,35 @@ body {
 .direction-container {
 }
 
+.direction-pantilt-container {
+}
+
 .direction-heading {
     margin-top: 10px;
     font-size: 14px;
     color: #b2b2b2;
     font-size: 15px; /* Adjust font size */
     margin-left: 20px; /* Adjust spacing between label and camera-pad */
+    margin-bottom: -5px; /* Reduce the gap between the label and the camera-pad */
+    font-weight: lighter; /* Set font weight to normal */
+}
+
+.direction-move-heading {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #b2b2b2;
+    font-size: 15px; /* Adjust font size */
+    margin-left: 20px; /* Adjust spacing between label and camera-pad */
+    margin-bottom: -5px; /* Reduce the gap between the label and the camera-pad */
+    font-weight: lighter; /* Set font weight to normal */
+}
+
+.direction-pan-heading {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #b2b2b2;
+    font-size: 15px; /* Adjust font size */
+    margin-left: 90px; /* Adjust spacing between label and camera-pad */
     margin-bottom: -5px; /* Reduce the gap between the label and the camera-pad */
     font-weight: lighter; /* Set font weight to normal */
 }
@@ -132,6 +155,9 @@ body {
     display: none;
 }
 
+.pantilt-pad.collapsed {
+    display: none;
+}
 .ptz-container.collapsed {
     display: none;
 }
@@ -346,6 +372,7 @@ body {
     border-top-right-radius: 5px; /* Adjust the radius for the top-right corner */
     border-bottom-left-radius: 0; /* Keep the bottom-left corner square */
     border-bottom-right-radius: 0; /* Keep the bottom-right corner square */
+    
 }
 .preset-image, .custom-preset-image {
     height: 124px; /* Maintain aspect ratio */
@@ -635,6 +662,16 @@ body {
     margin-top: 7px;
 }
 
+.pantilt-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 50px);
+    grid-template-rows: repeat(3, 50px);
+    grid-gap: 10px;
+    width: 200px;
+    margin-left: 20px;
+    margin-top: 7px;
+}
+
 .arrow-button {
     width: 50px;
     height: 50px;
@@ -647,6 +684,21 @@ body {
     transition: transform 0.1s ease; /* Smooth transition for scaling */
 }
 .arrow-button:hover {
+    background-color: #1565c0; /* Highlight color on hover */
+}
+
+.ptz-arrow-button {
+    width: 50px;
+    height: 50px;
+    background-color: #1a1919;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 20px;
+    transition: transform 0.1s ease; /* Smooth transition for scaling */
+}
+.ptz-arrow-button:hover {
     background-color: #1565c0; /* Highlight color on hover */
 }
 
@@ -885,4 +937,35 @@ body {
 .autofocus-button:hover {
     background-color: #1565c0; /* Highlight color on hover */
 }
+
+.mode-labels {
+    display: flex;
+}
+
+.direction-heading {
+    margin-right: 10px; /* Adjust as needed */
+}
+/* Adjust slider size and position */
+.slider {
+    width: 150px; /* Adjust width as needed */
+    margin-top: 10px; /* Adjust margin top as needed */
+    margin-bottom: 10px; /* Adjust margin bottom as needed */
+    margin-left: 25px;
+}
+
+.hidden {
+    display: none;
+}
+
+.pad-heading-container {
+    display: flex;
+}
+
+.direction-move-heading.active,
+.direction-pan-heading.active {
+    text-decoration: underline;
+    text-decoration-thickness: 2px; /* Adjust the thickness as needed */
+}
+
+
 
