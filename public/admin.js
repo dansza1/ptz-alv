@@ -1,9 +1,8 @@
+// admin.js
+
 window.onload = function() {
     populateCurrentCameras();
 };
-
-
-// admin.js
 
 // Function to fetch current Twitch settings
 function fetchTwitchSettings() {
@@ -53,8 +52,6 @@ function editField(fieldId) {
     // Save the new value to the server
     saveTwitchSettings();
 }
-
-
 
 function saveTwitchSettings() {
     console.log('Save button clicked'); // Add this line to check if the function is being called
@@ -158,7 +155,7 @@ function showInterfaceSettings() {
                 </td>
             </tr>
              <tr>
-                <td><label class="field-label">Enable Direction-pad Arrow keys</label></td>
+                <td><label class="field-label">Enable Hotkeys</label></td>
                 <td>
                 <input type="checkbox" class="edit-checkbox" id="arrowKeyCheckbox" checked>
                 </td>
@@ -381,8 +378,8 @@ function showCamera() {
                         <button class="btn-edit" onclick="editCamera('${camera.name}')">Rename</button>
                         <button class="btn-delete" onclick="deleteCamera('${camera.name}')">Delete</button>
                         <button class="btn-move-up" onclick="moveCameraUp('${camera.name}')">Move Up</button>
-                        <input type="number" id="move-to-input-${camera.name}" class="move-to-input" placeholder="Enter line number">
-                        <button class="btn-move-to" onclick="moveCameraTo('${camera.name}')">Move To</button>
+                        <input type="number" id="move-to-input-${camera.name}" class="move-to-input" placeholder="Line #">
+                        <button class="btn-move-to" onclick="moveCameraTo('${camera.name}')">Move</button>
                     </td>
                 `;
                 cameraList.appendChild(row);
@@ -401,7 +398,7 @@ function showCameraDetails(cameraName) {
             <div class="camera-header">
                 <span class="camera-name">Camera Name: ${cameraName}</span>
             </div>
-            <button class="btn-add-preset" onclick="addNewPreset('${cameraName}')">Add New Preset</button>
+            <button class="btn-add-preset" onclick="addNewPreset('${cameraName}')">Add Preset</button>
             <button class="btn-add-custom-preset" onclick="showCustomPresetInputs('${cameraName}')">Add Custom Preset</button>
             <button class="btn-sync-preset" onclick="syncPresets('${cameraName}')">Sync Presets</button>
             <table id="presetTable">
@@ -409,6 +406,7 @@ function showCameraDetails(cameraName) {
                     <tr>
                         <th>#</th> 
                         <th>Preset Name</th>
+                        <th>Hotkey</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -436,7 +434,6 @@ function showCameraDetails(cameraName) {
 }
 
 
-// Function to fetch and populate regular presets
 function fetchAndPopulatePresets(cameraName) {
     fetch('/cameras')
         .then(response => response.json())
@@ -454,18 +451,183 @@ function fetchAndPopulatePresets(cameraName) {
                 row.innerHTML = `
                     <td>${index + 1}</td>
                     <td><span class="preset-name">${preset}</span></td>
+                    <td><span class="hotkey"></span></td>
                     <td>
                         <button class="btn-edit" onclick="editPreset('${cameraName}', '${index}')">Rename</button>
                         <button class="btn-delete" onclick="deletePreset('${cameraName}', '${index}')">Delete</button>
-                        <button class="btn-move-up" onclick="movePresetUp('${cameraName}', '${index}')">Move Up</button>
-                        <input type="number" class="move-to-input" placeholder="Enter line number">
-                        <button class="btn-move-to" onclick="movePresetTo('${cameraName}', '${index}')">Move To</button>
+                        <input type="number" class="move-to-input" placeholder="Line #">
+                        <button class="btn-move-to" onclick="movePresetTo('${cameraName}', '${index}')">Move</button>
                     </td>
                 `;
                 presetList.appendChild(row);
+
+                // Fetch the hotkey for the preset
+                getHotkey(cameraName, preset, false)
+                    .then(hotkey => {
+                        console.log('Hotkey for preset', preset, ':', hotkey);
+                        if (hotkey && typeof hotkey === 'string' && hotkey.trim() !== '') {
+                            // Display the hotkey as a button
+                            const hotkeyButton = document.createElement('button');
+                            hotkeyButton.textContent = hotkey;
+                            hotkeyButton.addEventListener('click', () => {
+                                const newHotkey = prompt('Enter hotkey:', hotkey);
+                                if (newHotkey !== null) {
+                                    // Update the hotkey
+                                    saveHotkey(cameraName, preset, newHotkey, false);
+                                }
+                            });
+                            row.querySelector('.hotkey').appendChild(hotkeyButton);
+                        } else if (hotkey && typeof hotkey === 'object' && hotkey.hotkey && typeof hotkey.hotkey === 'string') {
+                            // Display the hotkey as a button from the object
+                            const hotkeyButton = document.createElement('button');
+                            hotkeyButton.textContent = hotkey.hotkey;
+                            hotkeyButton.addEventListener('click', () => {
+                                const newHotkey = prompt('Enter hotkey:', hotkey.hotkey);
+                                if (newHotkey !== null) {
+                                    // Update the hotkey
+                                    saveHotkey(cameraName, preset, newHotkey, false);
+                                }
+                            });
+                            row.querySelector('.hotkey').appendChild(hotkeyButton);
+                        } else {
+                            // Display the "Add" button if no hotkey is assigned or hotkey is empty string
+                            const addHotkeyButton = document.createElement('button');
+                            addHotkeyButton.textContent = 'Add';
+                            addHotkeyButton.addEventListener('click', () => {
+                                const newHotkey = prompt('Enter hotkey:');
+                                if (newHotkey !== null && newHotkey.trim() !== '') {
+                                    // Save the new hotkey
+                                    saveHotkey(cameraName, preset, newHotkey, false)
+                                        .then(() => {
+                                            // Update the UI with the new hotkey
+                                            row.querySelector('.hotkey').textContent = newHotkey;
+                                            // Replace the "Add" button with the hotkey button
+                                            row.querySelector('.hotkey').innerHTML = '';
+                                            const hotkeyButton = document.createElement('button');
+                                            hotkeyButton.textContent = newHotkey;
+                                            hotkeyButton.addEventListener('click', () => {
+                                                const updatedHotkey = prompt('Enter hotkey:', newHotkey);
+                                                if (updatedHotkey !== null && updatedHotkey.trim() !== '') {
+                                                    // Update the hotkey
+                                                    saveHotkey(cameraName, preset, updatedHotkey, false);
+                                                }
+                                            });
+                                            row.querySelector('.hotkey').appendChild(hotkeyButton);
+                                        })
+                                        .catch(error => console.error('Error saving hotkey:', error));
+                                }
+                            });
+                            row.querySelector('.hotkey').appendChild(addHotkeyButton);
+                        }
+                    })
+                    .catch(error => console.error('Error fetching hotkey:', error));
             });
         })
         .catch(error => console.error('Error fetching presets:', error));
+}
+
+
+function getHotkey(cameraName, preset, custom) {
+    // Determine the endpoint URL based on whether it's for custom or normal hotkeys
+    const endpoint = custom ? '/custom-hotkeys' : '/hotkeys';
+
+    // Retrieve hotkey data from the server
+    return fetch(endpoint)
+        .then(response => response.json())
+        .then(data => {
+            // Check if the hotkey exists for the provided cameraName and preset
+            if (data[cameraName] && data[cameraName][preset]) {
+                return data[cameraName][preset]; // Return the hotkey if found
+            } else {
+                return null; // Return null if the hotkey doesn't exist
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching hotkey data:', error);
+            return null; // Return null if there's an error
+        });
+}
+
+function saveHotkey(cameraName, preset, hotkey, isCustom) {
+    // Check if the hotkey is already assigned to another preset for the same camera
+    console.log('Values being sent to backend:', { cameraName, preset, hotkey }); // Log the values being sent
+    const endpoint = isCustom ? '/save-custom-hotkey' : '/save-hotkey';
+
+    return fetch('/hotkeys')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch hotkey data');
+            }
+            return response.json();
+        })
+        .then(hotkeys => {
+            if (!hotkeys || Object.keys(hotkeys).length === 0) {
+                // If hotkeys is empty or undefined, create a new object
+                hotkeys = {};
+            }
+
+            if (!hotkey) {
+                // If hotkey is null or undefined, save it directly
+                return fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        cameraName: cameraName,
+                        preset: preset,
+                        hotkey: hotkey
+                    })
+                });
+            }
+
+            const existingHotkeys = hotkeys[cameraName];
+            if (existingHotkeys) {
+                const existingPreset = Object.keys(existingHotkeys).find(p => existingHotkeys[p] === hotkey && p !== preset);
+                if (existingPreset) {
+                    window.alert(`Hotkey '${hotkey}' is already assigned to preset '${existingPreset}'`);
+                    fetchAndPopulatePresets(cameraName);
+                    fetchAndPopulateCustomPresets(cameraName);
+                    return; // Exit the function without saving if hotkey already assigned to another preset
+                }
+            }
+
+            const existingHotkey = hotkeys[cameraName] && hotkeys[cameraName][preset];
+            if (existingHotkey && existingHotkey === hotkey) {
+                // No need to save if the hotkey is already assigned to the same preset
+                return;
+            }
+
+            // Send a POST request to the backend to save the hotkey
+            return fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    cameraName: cameraName,
+                    preset: preset,
+                    hotkey: hotkey
+                })
+            });
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to save hotkey');
+            }
+            console.log('Hotkey saved successfully');
+            fetchAndPopulatePresets(cameraName);
+            fetchAndPopulateCustomPresets(cameraName); // Call to fetch and populate custom presets
+        })
+        .catch(error => {
+            if (isCustom) {
+                window.alert(`Hotkey '${hotkey}' is already assigned to another preset.`);
+                fetchAndPopulatePresets(cameraName);
+                fetchAndPopulateCustomPresets(cameraName);
+            } else {
+                console.log('Error saving hotkey: ${error.message}');
+            }
+        });
 }
 
 function fetchAndPopulateCustomPresets(cameraName) {
@@ -480,14 +642,64 @@ function fetchAndPopulateCustomPresets(cameraName) {
                 row.innerHTML = `
                     <td>${index + 1}</td>
                     <td><span class="preset-name">${preset.presetName}</span></td>
+                    <td><span class="hotkey"></span></td>
                     <td>
                         <button class="btn-edit" onclick="editCustomPreset('${cameraName}', '${preset.presetName}')">Edit</button>
                         <button class="btn-delete" onclick="deleteCustomPreset('${cameraName}', '${preset.presetName}')">Delete</button>
-		        <input type="number" class="move-to-input" placeholder="Enter line number">
-                        <button class="btn-move-to-custom" onclick="moveCustomPresetTo('${cameraName}', '${index}')">Move To</button>
+                        <input type="number" class="move-to-input" placeholder="Line #">
+                        <button class="btn-move-to-custom" onclick="moveCustomPresetTo('${cameraName}', '${index}')">Move</button>
                     </td>
                 `;
                 customPresetList.appendChild(row);
+
+                // Fetch the hotkey for the custom preset
+                getHotkey(cameraName, preset.presetName, true)
+                    .then(hotkey => {
+                        console.log('Hotkey for custom preset', preset.presetName, ':', hotkey);
+                        if (hotkey && typeof hotkey === 'string' && hotkey.trim() !== '') {
+                            // Display the hotkey as a button
+                            const hotkeyButton = document.createElement('button');
+                            hotkeyButton.textContent = hotkey;
+                            hotkeyButton.addEventListener('click', () => {
+                                const newHotkey = prompt('Enter hotkey:', hotkey);
+                                if (newHotkey !== null) {
+                                    // Update the hotkey
+                                    saveHotkey(cameraName, preset.presetName, newHotkey, true);
+                                }
+                            });
+                            row.querySelector('.hotkey').appendChild(hotkeyButton);
+                        } else {
+                            // Display the "Add" button if no hotkey is assigned or hotkey is empty string
+                            const addHotkeyButton = document.createElement('button');
+                            addHotkeyButton.textContent = 'Add';
+                            addHotkeyButton.addEventListener('click', () => {
+                                const newHotkey = prompt('Enter hotkey:');
+                                if (newHotkey !== null && newHotkey.trim() !== '') {
+                                    // Save the new hotkey
+                                    saveHotkey(cameraName, preset.presetName, newHotkey, true)
+                                        .then(() => {
+                                            // Update the UI with the new hotkey
+                                            row.querySelector('.hotkey').textContent = newHotkey;
+                                            // Replace the "Add" button with the hotkey button
+                                            row.querySelector('.hotkey').innerHTML = '';
+                                            const hotkeyButton = document.createElement('button');
+                                            hotkeyButton.textContent = newHotkey;
+                                            hotkeyButton.addEventListener('click', () => {
+                                                const updatedHotkey = prompt('Enter hotkey:', newHotkey);
+                                                if (updatedHotkey !== null && updatedHotkey.trim() !== '') {
+                                                    // Update the hotkey
+                                                    saveHotkey(cameraName, preset.presetName, updatedHotkey, true);
+                                                }
+                                            });
+                                            row.querySelector('.hotkey').appendChild(hotkeyButton);
+                                        })
+                                        .catch(error => console.error('Error saving hotkey:', error));
+                                }
+                            });
+                            row.querySelector('.hotkey').appendChild(addHotkeyButton);
+                        }
+                    })
+                    .catch(error => console.error('Error fetching hotkey:', error));
             }); 
             
             // Add event listener to edit button
@@ -524,12 +736,13 @@ function populateCustomPresetInputs(presetName) {
             document.getElementById('pan').value = presetData.pan;
             document.getElementById('tilt').value = presetData.tilt;
             document.getElementById('zoom').value = presetData.zoom;
+            document.getElementById('focus').value = presetData.focus;
 
             // Pre-select the dropdown option based on selectedPreset
-            const selectedPreset = presetData.selectedPreset;
-            const dropdownList = document.getElementById('presetSelect');
+            const autoFocus = presetData.autoFocus;
+            const dropdownList = document.getElementById('autoFocus');
             Array.from(dropdownList.options).forEach(option => {
-                if (option.value === selectedPreset) {
+                if (option.value === autoFocus) {
                     option.selected = true;
                 }
             });
@@ -538,6 +751,7 @@ function populateCustomPresetInputs(presetName) {
             console.error('Error fetching preset data:', error);
         });
 }
+
 
 
 function syncPresets(cameraName) {
@@ -610,6 +824,93 @@ function fetchSyncPresets(cameraName) {
     });
 }
 
+
+function fetchGetInfo(cameraName) {
+    showDialog('Fetching presets from Twitch');
+
+    // Prepare the request body
+    const requestBody = {
+        cameraName: cameraName
+    };
+
+    // Send a POST request to the backend endpoint
+    fetch('/fetch-getinfo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to fetch presets');
+        }
+        return response.json(); // Parse response as JSON
+    })
+    .then(data => {
+        if (data.presets && data.presets.length > 0) {
+            // Process presets
+            const presets = data.presets;
+            console.log('Received presets:', presets);
+            // Update UI elements with preset values
+            document.getElementById('pan').value = presets[0];
+            document.getElementById('tilt').value = presets[1];
+            document.getElementById('zoom').value = presets[2];
+            // Update autoFocus dropdown
+            const autoFocusDropdown = document.getElementById('autoFocus');
+            autoFocusDropdown.value = presets[3] === 'on' ? 'yes' : 'no';
+            // Update autofocus option based on fetched value
+            for (let i = 0; i < autoFocusDropdown.options.length; i++) {
+                if (autoFocusDropdown.options[i].value === presets[3]) {
+                    autoFocusDropdown.selectedIndex = i;
+                    break;
+                }
+            }
+            document.getElementById('focus').value = presets[4];
+            closeDialog(); // Close dialog upon success
+        } else {
+            console.log('No presets received.');
+            closeDialog();
+            alert('No presets found');
+            // Handle no presets case
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching presets:', error);
+        // Handle error case
+        closeDialog();
+    });
+}
+
+
+function syncGetInfo(cameraName) {
+    // Construct the command to be sent
+    const command = `!ptzgetinfo ${cameraName.toLowerCase()}`;
+
+
+    // Send the command to the backend endpoint
+    fetch('/send-command', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ command })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to send command');
+        }
+        console.log('Command sent successfully');
+        // After successfully sending the command, listen for Twitch chat messages
+        fetchGetInfo(cameraName);
+    })
+    .catch(error => {
+        console.error('Error sending command:', error);
+    });
+}
+
+
+
 function displaySyncPresets(cameraName, fetchedPresets) {
     // Fetch presets from the server
     fetch('/cameras')
@@ -679,7 +980,7 @@ function displaySyncPresets(cameraName, fetchedPresets) {
             // Add "Add new presets" button
             const addPresetsButton = document.createElement('button');
             addPresetsButton.textContent = 'Add new presets';
-	    addPresetsButton.classList.add('btn-add-presets'); // Add the class to the button
+	        addPresetsButton.classList.add('btn-add-presets'); // Add the class to the button
             addPresetsButton.addEventListener('click', () => {
                 // Get all selected presets
                 const selectedPresets = Array.from(document.querySelectorAll('#newPresetTable input[type="checkbox"]:checked'))
@@ -747,6 +1048,7 @@ function editCustomPreset(cameraName, presetName) {
 }
 
 
+
 function showCustomPresetInputs(cameraName) {
     const presetList = document.getElementById('presetList');
     const presetNames = Array.from(presetList.querySelectorAll('.preset-name')).map(preset => preset.textContent);
@@ -754,40 +1056,60 @@ function showCustomPresetInputs(cameraName) {
     const mainContent = document.getElementById('mainContent');
     isNewPreset = true;
     mainContent.innerHTML = `
-        <div id="customPresetInputs">
-            <label for="presetName">Preset Name:</label>
-            <input type="text" id="presetName"><br>
-            <label for="presetSelect">Select Existing Preset:</label>
-            <select id="presetSelect">
-                <option value="">Select Preset</option>
-                ${presetNames.map(preset => `<option value="${preset}">${preset}</option>`).join('')}
-            </select><br>
-            <label>Pan Tilt Zoom:</label><br>
-            <label for="pan">Pan:</label>
-            <input type="number" id="pan"><br>
-            <label for="tilt">Tilt:</label>
-            <input type="number" id="tilt"><br>
-            <label for="zoom">Zoom:</label>
-            <input type="number" id="zoom"><br>
-            <button onclick="saveCustomPreset('${cameraName}')">Save</button>
-        </div>
+    <div id="customPresetInputs">
+    <div class="sync-container">
+    <label style="width: 100px;">Preset Name:</label>
+    <input type="text" id="presetName"><br>
+    </div>
+    <div class="sync-button-container">
+        <label>Pan Tilt Zoom:</label>
+        <button onclick="syncGetInfo('${cameraName}')" id="syncButton">Sync</button><br>
+    </div>
+    <div class="sync-container">
+    <label style="width: 100px;">Pan:</label>
+    <input type="number" id="pan"><br>
+    </div>
+    <div class="sync-container">
+    <label style="width: 100px;">Tilt:</label>
+    <input type="number" id="tilt"><br>
+    </div>
+    <div class="sync-container">
+    <label style="width: 100px;">Zoom:</label>
+    <input type="number" id="zoom"><br> 
+    </div>
+    <div class="sync-container">
+    <label style="width: 100px;">Auto Focus:</label>
+    <select id="autoFocus">
+        <option value="on">on</option>
+        <option value="off">off</option>
+    </select><br>   
+    </div>
+    <div class="sync-container">
+    <label style="width: 100px;">Focus:</label>
+    <input type="number" id="focus"><br>
+    </div>
+    <button class="btn-save" onclick="saveCustomPreset('${cameraName}')">Save</button>
+</div>
     `;
 }
 
 function saveCustomPreset(cameraName) {
     const presetName = document.getElementById('presetName').value;
-    const selectedPreset = document.getElementById('presetSelect').value; // Getting the selected preset
     const pan = document.getElementById('pan').value;
     const tilt = document.getElementById('tilt').value;
     const zoom = document.getElementById('zoom').value;
-    console.log('Saving Preset Data:', { cameraName, selectedPreset, presetName, pan, tilt, zoom }); // Log data to be saved
+    const autoFocus = document.getElementById('autoFocus').value;
+    const focus = document.getElementById('focus').value;
+
+    console.log('Saving Preset Data:', { cameraName, presetName, pan, tilt, zoom, autoFocus, focus }); // Log data to be saved
     const payload = {
         cameraName: cameraName,
-        selectedPreset: selectedPreset, // Include the selected preset in the payload
         presetName: presetName,
         pan: pan,
         tilt: tilt,
         zoom: zoom,
+        autoFocus: autoFocus,
+        focus: focus,
         isNewPreset: isNewPreset,
         originalPresetName: originalPresetName // Include the original preset name
     };
@@ -811,6 +1133,7 @@ function saveCustomPreset(cameraName) {
         document.getElementById('pan').value = '';
         document.getElementById('tilt').value = '';
         document.getElementById('zoom').value = '';
+        document.getElementById('focus').value = '';
         showCameraDetails(cameraName); // Show camera details again, which includes preset pad
     })
     .catch(error => {
@@ -818,6 +1141,8 @@ function saveCustomPreset(cameraName) {
         // Optionally, handle error or provide feedback to the user
     });
 }
+
+
 
 function deleteCustomPreset(cameraName, presetName) {
     // Display a confirmation dialog

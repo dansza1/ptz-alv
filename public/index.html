@@ -129,12 +129,24 @@
             </div>
 
           </div>
+
+          <div class="direction-container">
+            <h2 class="direction-heading" style="cursor: pointer;" onclick="toggleDirectionPad('.other-container')">- Other</h2>
+            <div class="other-container">
+                <div class="other-wrapper">
+                    <button class="volume-button" onclick="sendVolumeControl()"></button>
+                </div>
+            </div>
+
+          </div>
+
+
         </div>
         </div>
 
         <!-- Preset buttons -->
         <div class="preset-container grid-layout">
-        <h2 class="label-preset">
+        <h2 class="label-preset" style="cursor: pointer;" onclick="toggleDirectionPad('.preset-pad')">
         Presets
         </h2>
             <div class="preset-pad" id="presetPad">

@@ -1,0 +1,11 @@
+v1.4:
+- Added hotkeys for presets
+- Added sound mixer for volume control
+- Added custom presets using ptzgetinfo and ptzseta
+
+v1.3:
+- Added PanTilt direction pad
+- Added setting to disable thumbnails on grid view
+- Added List / Grid view switcher
+- Added setting to enable / disable keyboard keys
+

@@ -170,6 +170,8 @@ body {
     display: none;
 }
 
+
+
 .camera-container {
     display: flex;
     flex-direction: column; /* Display buttons in a vertical list */
@@ -325,6 +327,9 @@ body {
         font-weight: lighter; /* Set font weight to normal */
     } 
 
+    .preset-pad.collapsed {
+        display: none;
+    }
 
   }
 
@@ -430,6 +435,9 @@ body {
     color: #ffffff;
 }
 
+.preset-pad.collapsed {
+    display: none;
+}
 }
 
 }
@@ -458,7 +466,7 @@ body {
 
     .preset-button, .custom-preset-button {
         font-family: "Roboto Mono", monospace;
-        font-size: 16px;
+        font-size: 14px;
         margin: 0;
         padding-left: 15px; /* Adjust the value as needed */
         color: white;
@@ -499,7 +507,6 @@ body {
         display: block; /* Set the label as a block-level element */
         position: relative;
         margin-bottom: -50px;
-        margin-top: 0px;
         margin-left: -70px; /* Adjust the margin-left value */
         font-weight: lighter; /* Set font weight to normal */
     }
@@ -515,6 +522,9 @@ body {
     width: 400px;
 }
 
+.preset-pad.collapsed {
+    display: none;
+}
 
 
 }
@@ -621,7 +631,9 @@ body {
     background-color: #1e88e5;
     color: #ffffff;
 }
-
+.preset-pad.collapsed {
+    display: none;
+}
 }
 
 }
@@ -881,6 +893,20 @@ body {
     margin-top: 7px;
     margin-left: 20px;
 }
+
+
+.other-wrapper {
+    display: flex;
+}   
+    
+.other-container {
+    display: flex;
+    flex-direction: column; /* Arrange elements in a column */
+    align-items: flex-start; /* Align items to the start */
+    margin-top: 7px;
+    margin-left: 20px;
+}
+    
     
 .focus-input {
     width: 76px; /* Set the width to match the direction-pad buttons */
@@ -920,6 +946,7 @@ body {
     background-color: #1e88e5; /* Highlight color on hover */
 }
 
+
 .autofocus-button {
     width: 76px;
     height: 50px;
@@ -935,6 +962,24 @@ body {
 }
 
 .autofocus-button:hover {
+    background-color: #1565c0; /* Highlight color on hover */
+}
+
+.volume-button {
+    width: 76px;
+    height: 50px;
+    background-color: #636363;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 20px;
+    background-image: url('/img/volume.svg');
+    background-size: 100% 100%; /* Stretch the image to fill the button */
+    background-repeat: no-repeat; /* Ensure the background image does not repeat */
+}
+
+.volume-button:hover {
     background-color: #1565c0; /* Highlight color on hover */
 }
 
@@ -967,5 +1012,84 @@ body {
     text-decoration-thickness: 2px; /* Adjust the thickness as needed */
 }
 
+.volume-control-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    background-color: #222222;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    min-width: 400px;
+}
 
+.volume-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.volume-container label {
+    flex: 1;
+    margin-right: 10px;
+    color: white;
+    font-size: large;
+}
+
+.volume-container labelvol {
+    flex: 1;
+    color: white;
+    margin-left: 20px;
+    width: 20px; /* Fixed width for the labels */
+}
+.volume-container button {
+    flex-shrink: 0; /* Prevent button from shrinking */
+    position: absolute;
+    right: 0;
+    margin-right: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 3px 3px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: small;
+
+}
+/* Style for the mute button */
+.volume-container .mute-button {
+    flex-shrink: 0; /* Prevent button from shrinking */
+    margin-right: 60px;
+    background-color: green;
+    color: #fff;
+    border: none;
+    padding: 4px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: small;
+    width: 20px;
+    height: 20px;
+    background-size: cover;
+    /* Add other styles as needed */
+}
+
+/* Style for the unmute button */
+.volume-container .unmute-button {
+    flex-shrink: 0; /* Prevent button from shrinking */
+    margin-right: 60px;
+    background-color: red;
+    color: #fff;
+    border: none;
+    padding: 4px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: small;
+    width: 20px;
+    height: 20px;
+    background-size: cover;
+    /* Add other styles as needed */
+}
 

@@ -400,25 +400,52 @@ body {
     font-weight: bold;
 }
 
-.btn-edit, .btn-delete, .btn-move-up, .btn-move-down .showButton {
+.btn-move-up, .btn-move-down .showButton {
     background-color: #007bff;
     color: #fff;
     border: none;
-    padding: 8px 12px;
+    padding: 8px 8px;
     cursor: pointer;
     border-radius: 4px;
     margin-right: 4px;
+    font-size: x-small;
+
 }
 
+.btn-edit-icon {
+    background-image: url('./img/edit.png');
+    background-size: cover; /* Ensure the image covers the entire button */
+    background-color: #007bff; /* Text color */
+    border: none; /* Remove border */
+    padding: 10px 10px; /* Padding */
+    cursor: pointer; /* Cursor style */
+    border-radius: 4px; /* Border radius */
+    margin-right: 4px; /* Right margin */
+    font-size: x-small; /* Font size */
+    width: 25px;
+    height: 25px;
+}
+.btn-edit {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 6px 6px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-right: 4px;
+    font-size: x-small;
+}
 
 .btn-delete {
     background-color: #d11a2a;
     color: #fff;
     border: none;
-    padding: 8px 12px;
+    padding: 6px 6px;
     cursor: pointer;
     border-radius: 4px;
     margin-right: 4px;
+    font-size: x-small;
+
 }
 
 .btn-delete:hover {
@@ -460,16 +487,28 @@ body {
 
 /* Style for Add New Preset button */
 .btn-add-preset, .btn-add-custom-preset, .btn-sync-preset{
-    background-color: #28a745;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 8px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 20px;
+    margin-bottom: 5px;
+    font-size: x-small;
+}
+
+.btn-save{
+    background-color: #007bff;
     color: #fff;
     border: none;
     padding: 8px 12px;
     cursor: pointer;
     border-radius: 4px;
-    margin-top: 20px;
+    margin-top: 10px;
     margin-bottom: 5px;
+    font-size: small;
 }
-
 .btn-add-camera {
     background-color: #28a745;
     color: #fff;
@@ -492,12 +531,12 @@ body {
     margin-bottom: 5px;
 }
 
-.btn-add-preset:hover, .btn-sync-preset:hover {
-    background-color: #218838;
+.btn-add-preset:hover, .btn-sync-preset:hover,  .btn-add-custom-preset:hover {
+    background-color: #0056b3;
 }
 
 .btn-add-custom-preset:hover {
-    background-color: #218838;
+    background-color: #0056b3;
 }
 
 .btn-delete-camera {
@@ -509,5 +548,40 @@ body {
     border-radius: 4px;
     margin-top: 20px;
     margin-bottom: 5px;
+}
+
+.hhotkey button {
+    background-color: green;
+    color: #fff;
+    border: none;
+    padding: 4px 7px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.hotkey button {
+    cursor: pointer;
+}
+
+.sync-button-container {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+.sync-button-container label {
+    margin-right: 10px; /* Adjust margin as needed */
+}
+
+.sync-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 3px;
+
+}
+
+.move-to-input {
+    width: 60px;
 }
 

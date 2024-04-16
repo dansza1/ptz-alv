@@ -1,1 +1,329 @@
-{"cameras":[{"name":"Pasture","presets":["home","feeder","angel","water","insidebarn","barn","barn2","barn2w","barn2hay","barn2r","grove","purplebase","roundpen","trailerl","trailerhay","fencenear","fencefar","pool","poolr","pooll","poolpole","pole","sandpit","trailer","brush","winniespot","feedstall","storm","sky","winnie","purplenest","fern","feederinspect","bughunt"]},{"name":"Parrots","presets":["home","parrotsw","littlessleep","abovedoor","door","littles","littlesw","littlest","littlesb","littlesbowl","littlesbowl2","littlesplatform","littles2","littles2top","littles2middle","littles2bottom","littlestablet","macaws","macawsw","macawst","macawsb","macawsbowl","macaws2bowl","macawsplatform","bothwindows","chickensl","chickensr","floor","training","platform"]},{"name":"Fox","presets":["left","platform2","platform","platforml","fenn","reed","belowplatform","belowramp","leftfence","treehouse","shade","center","hillwide","hillright","hillrightw","den","door","hilltop","table","bench","bench2","insidedoor","fennroll","kaylatraining","lindsaytraining","treeclimb","fenndig","down","treehouser","treehousel"]},{"name":"CrowIn","presets":["home","platform","window","water","top","backcorner","outside","entry","down","rightperch","backleftcorner","heater","back"]},{"name":"CrowOut","presets":["home","right","corner","ground","groundrc","groundlc","water","backcorner","platform","door","entry","bench","left","treet","treeb","tree","platforminside","cache"]},{"name":"Marmin","presets":["home","right","left","windows","flaps","domeleft","domeright","bowll","center","bridger","bridgel","bridgec","bridgecl","win1","win2","win3","win4","cornershelf","down","table"]},{"name":"Marmout","presets":["home","flaps","table","domes","platformleft","backdoor","frontdoor","ir","below","tire","hose","topshelfl","topshelfr","bottomshelfl","bottomshelfr","right","top","banan","leftpostshelves","rightpostb","rightshelves","rightshelveslow","rightshelvest","rightscreen","domel","domer","down"]},{"name":"Georgie","presets":["water","ramp","dirt","closedirt","wide","shore"]},{"name":"Foxcorner","presets":["home","den","table","hillright","training","insidedoor","hillwide","hillleft"]},{"name":"Marty","presets":["a","b","c","food1","food2"]},{"name":"Roaches","presets":["home","stickt","stickb","sticktl","down","left","leftcorner","food","food1","food2","top"]},{"name":"Puppy","presets":["home"]},{"name":"bb","presets":["home","backcorner","a","b","food","topright","backleft","backright","backcenter"]},{"name":"Hank","presets":["home","top","middle","bottom"]},{"name":"Rat1","presets":["home"]},{"name":"Rat2","presets":["home"]},{"name":"Rat3","presets":["home"]},{"name":"crowmulti","presets":[]}]}
+{
+  "cameras": [
+    {
+      "name": "Pasture",
+      "presets": [
+        "home",
+        "feeder",
+        "angel",
+        "water",
+        "insidebarn",
+        "barn",
+        "barn2",
+        "barn2w",
+        "barn2hay",
+        "barn2r",
+        "grove",
+        "purplebase",
+        "roundpen",
+        "trailer",
+        "trailerl",
+        "trailerhay",
+        "fencenear",
+        "fencefar",
+        "pool",
+        "poolr",
+        "pooll",
+        "poolpole",
+        "pole",
+        "sandpit",
+        "brush",
+        "winniespot",
+        "feedstall",
+        "storm",
+        "sky",
+        "winnie",
+        "purplenest",
+        "fern",
+        "feederinspect",
+        "bughunt"
+      ]
+    },
+    {
+      "name": "Parrots",
+      "presets": [
+        "home",
+        "parrotsw",
+        "littlessleep",
+        "abovedoor",
+        "door",
+        "littles",
+        "littlesw",
+        "littlest",
+        "littlesb",
+        "littlesbowl",
+        "littlesbowl2",
+        "littlesplatform",
+        "littles2",
+        "littles2top",
+        "littles2middle",
+        "littles2bottom",
+        "littlestablet",
+        "macaws",
+        "macawsw",
+        "macawst",
+        "macawsb",
+        "macawsbowl",
+        "macaws2bowl",
+        "macawsplatform",
+        "bothwindows",
+        "chickensl",
+        "chickensr",
+        "floor",
+        "training",
+        "platform",
+        "floorr",
+        "floorl",
+        "chickensm",
+        "littlesm"
+      ]
+    },
+    {
+      "name": "Fox",
+      "presets": [
+        "left",
+        "door",
+        "platform",
+        "platforml",
+        "fenn",
+        "reed",
+        "belowplatform",
+        "belowramp",
+        "leftfence",
+        "treehouse",
+        "shade",
+        "center",
+        "hillwide",
+        "hillright",
+        "hillrightw",
+        "den",
+        "hilltop",
+        "table",
+        "bench",
+        "bench2",
+        "insidedoor",
+        "fennroll",
+        "kaylatraining",
+        "lindsaytraining",
+        "treeclimb",
+        "fenndig",
+        "treehouser",
+        "treehousel",
+        "down",
+        "downright",
+        "downleft"
+      ]
+    },
+    {
+      "name": "CrowIn",
+      "presets": [
+        "home",
+        "platform",
+        "window",
+        "water",
+        "top",
+        "backcorner",
+        "outside",
+        "entry",
+        "down",
+        "rightperch",
+        "backleftcorner",
+        "heater",
+        "back",
+        "table"
+      ]
+    },
+    {
+      "name": "CrowOut",
+      "presets": [
+        "home",
+        "right",
+        "corner",
+        "ground",
+        "groundrc",
+        "groundlc",
+        "water",
+        "backcorner",
+        "platform",
+        "door",
+        "entry",
+        "bench",
+        "left",
+        "treet",
+        "treeb",
+        "tree",
+        "platforminside",
+        "cache",
+        "training"
+      ]
+    },
+    {
+      "name": "Marmin",
+      "presets": [
+        "home",
+        "right",
+        "left",
+        "windows",
+        "flaps",
+        "domeleft",
+        "domeright",
+        "bowll",
+        "center",
+        "bridger",
+        "bridgel",
+        "bridgec",
+        "bridgecl",
+        "win1",
+        "win2",
+        "win3",
+        "win4",
+        "cornershelf",
+        "down",
+        "table",
+        "floor"
+      ]
+    },
+    {
+      "name": "Marmout",
+      "presets": [
+        "home",
+        "flaps",
+        "table",
+        "domes",
+        "platformleft",
+        "backdoor",
+        "frontdoor",
+        "ir",
+        "below",
+        "tire",
+        "hose",
+        "topshelfl",
+        "topshelfr",
+        "bottomshelfl",
+        "bottomshelfr",
+        "right",
+        "top",
+        "banan",
+        "leftpostshelves",
+        "leftpostshelvesl",
+        "rightpostb",
+        "rightshelves",
+        "rightshelveslow",
+        "rightshelvest",
+        "rightscreen",
+        "domel",
+        "domer",
+        "down",
+        "centershelf",
+        "net",
+        "leftscreen"
+      ]
+    },
+    {
+      "name": "Georgie",
+      "presets": [
+        "water",
+        "ramp",
+        "dirt",
+        "closedirt",
+        "wide",
+        "shore",
+        "shoreright"
+      ]
+    },
+    {
+      "name": "Foxcorner",
+      "presets": [
+        "home",
+        "den",
+        "table",
+        "hillright",
+        "training",
+        "insidedoor",
+        "hillwide",
+        "hillleft"
+      ]
+    },
+    {
+      "name": "Marty",
+      "presets": [
+        "a",
+        "b",
+        "c",
+        "food1",
+        "food2"
+      ]
+    },
+    {
+      "name": "Roaches",
+      "presets": [
+        "home",
+        "stickt",
+        "stickb",
+        "sticktl",
+        "down",
+        "left",
+        "leftcorner",
+        "food",
+        "food1",
+        "food2",
+        "top"
+      ]
+    },
+    {
+      "name": "Puppy",
+      "presets": [
+        "home"
+      ]
+    },
+    {
+      "name": "bb",
+      "presets": [
+        "home",
+        "backcorner",
+        "a",
+        "b",
+        "food",
+        "topright",
+        "backleft",
+        "backright",
+        "backcenter"
+      ]
+    },
+    {
+      "name": "Hank",
+      "presets": [
+        "home",
+        "top",
+        "middle",
+        "bottom"
+      ]
+    },
+    {
+      "name": "Rat1",
+      "presets": [
+        "home"
+      ]
+    },
+    {
+      "name": "Rat2",
+      "presets": [
+        "home"
+      ]
+    },
+    {
+      "name": "Rat3",
+      "presets": [
+        "home"
+      ]
+    },
+    {
+      "name": "crowmulti",
+      "presets": []
+    },
+    {
+      "name": "Wolf",
+      "presets": []
+    }
+  ]
+}

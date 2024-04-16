@@ -1,10 +1,11 @@
 [
   {
     "cameraName": "Pasture",
-    "selectedPreset": "barn2r",
-    "presetName": "barn2rback",
-    "pan": "-0.5",
-    "tilt": ".35",
-    "zoom": "25"
+    "presetName": "roundpenz",
+    "pan": "-20.19",
+    "tilt": "-2",
+    "zoom": "675",
+    "autoFocus": "on",
+    "focus": ""
   }
 ]

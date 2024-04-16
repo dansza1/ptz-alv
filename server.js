@@ -103,11 +103,15 @@ app.post('/add-preset', (req, res) => {
 
         camerasData.cameras[cameraIndex].presets.push(newPresetName);
 
-        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData), 'utf8', (writeErr) => {
-            if (writeErr) {
-                console.error('Error writing cameras data:', writeErr);
-                return res.status(500).send('Error writing cameras data');
-            }
+
+
+            fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData, null, 2), 'utf8', (writeErr) => {
+                if (writeErr) {
+                    console.error('Error writing cameras data:', writeErr);
+                    return res.status(500).send('Error writing cameras data');
+                }
+            
+            
 
             console.log('Preset added successfully:', newPresetName);
             res.send('Preset added successfully');
@@ -142,7 +146,7 @@ app.post('/add-camera', (req, res) => {
         camerasData.cameras.push({ name: cameraName, presets: [] });
 
         // Write updated cameras data back to the JSON file
-        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData), 'utf8', (writeErr) => {
+        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData, null, 2), 'utf8', (writeErr) => {
             if (writeErr) {
                 console.error('Error writing cameras data:', writeErr);
                 return res.status(500).send('Error writing cameras data');
@@ -199,7 +203,7 @@ app.post('/update-preset-order', (req, res) => {
         // Update presets order for the specified camera
         camerasData.cameras[cameraIndex].presets = presets;
 
-        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData), 'utf8', (writeErr) => {
+        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData, null, 2), 'utf8', (writeErr) => {
             if (writeErr) {
                 console.error('Error writing cameras data:', writeErr);
                 return res.status(500).send('Error writing cameras data');
@@ -302,7 +306,7 @@ app.post('/rename-preset', (req, res) => {
         camerasData.cameras[cameraIndex].presets[presetIndex] = newPresetName;
 
         // Write updated cameras data back to the JSON file
-        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData), 'utf8', (writeErr) => {
+        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData, null, 2), 'utf8', (writeErr) => {
             if (writeErr) {
                 console.error('Error writing cameras data:', writeErr);
                 return res.status(500).send('Error writing cameras data');
@@ -346,7 +350,7 @@ app.post('/delete-preset', (req, res) => {
         camerasData.cameras[cameraIndex].presets.splice(presetId, 1);
 
         // Write the updated cameras data back to the JSON file
-        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData), 'utf8', (writeErr) => {
+        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData, null, 2), 'utf8', (writeErr) => {
             if (writeErr) {
                 console.error('Error writing cameras data:', writeErr);
                 return res.status(500).send('Error writing cameras data');
@@ -390,7 +394,7 @@ app.post('/rename-camera', (req, res) => {
         camerasData.cameras[cameraIndex].name = newCameraName;
 
         // Write updated cameras data back to the JSON file
-        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData), 'utf8', (writeErr) => {
+        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData, null, 2), 'utf8', (writeErr) => {
             if (writeErr) {
                 console.error('Error writing cameras data:', writeErr);
                 return res.status(500).send('Error writing cameras data');
@@ -436,7 +440,7 @@ app.post('/delete-camera', (req, res) => {
         camerasData.cameras.splice(cameraIndex, 1);
 
         // Write the updated cameras data back to the JSON file
-        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData), 'utf8', (writeErr) => {
+        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData, null, 2), 'utf8', (writeErr) => {
             if (writeErr) {
                 console.error('Error writing cameras data:', writeErr);
                 return res.status(500).send('Error writing cameras data');
@@ -482,7 +486,7 @@ app.post('/move-camera-up', (req, res) => {
         [camerasData.cameras[cameraIndex], camerasData.cameras[cameraIndex - 1]] = [camerasData.cameras[cameraIndex - 1], camerasData.cameras[cameraIndex]];
 
         // Write updated cameras data back to the JSON file
-        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData), 'utf8', (writeErr) => {
+        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData, null, 2), 'utf8', (writeErr) => {
             if (writeErr) {
                 console.error('Error writing cameras data:', writeErr);
                 return res.status(500).send('Error writing cameras data');
@@ -529,7 +533,7 @@ app.post('/move-camera-to', (req, res) => {
         camerasData.cameras.splice(newIndex, 0, movedCamera);
 
         // Write updated cameras data back to the JSON file
-        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData), 'utf8', (writeErr) => {
+        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData, null, 2), 'utf8', (writeErr) => {
             if (writeErr) {
                 console.error('Error writing cameras data:', writeErr);
                 return res.status(500).send('Error writing cameras data');
@@ -541,10 +545,8 @@ app.post('/move-camera-to', (req, res) => {
     });
 });
 
-
-
 app.post('/save-custom-preset', (req, res) => {
-    const { cameraName, selectedPreset, presetName, pan, tilt, zoom, isNewPreset, originalPresetName } = req.body;
+    const { cameraName, presetName, pan, tilt, zoom, autoFocus, focus, isNewPreset, originalPresetName } = req.body;
     console.log('Received request body:', req.body);
     console.log('isNewPreset:', isNewPreset);
 
@@ -570,11 +572,12 @@ app.post('/save-custom-preset', (req, res) => {
             // For creating a new preset
             presets.push({
                 cameraName,
-                selectedPreset,
                 presetName,
                 pan,
                 tilt,
-                zoom
+                zoom,
+                autoFocus,
+                focus
             });
         } else {
             // For editing an existing preset
@@ -584,11 +587,12 @@ app.post('/save-custom-preset', (req, res) => {
             }
             presets[index] = {
                 cameraName,
-                selectedPreset,
                 presetName,
                 pan,
                 tilt,
-                zoom
+                zoom,
+                autoFocus,
+                focus
             };
         }
 
@@ -603,7 +607,6 @@ app.post('/save-custom-preset', (req, res) => {
         });
     });
 });
-
 
 
 // DELETE route to handle deleting a custom preset
@@ -701,6 +704,22 @@ function sendMessage(message) {
     lastCommand = message;
 }       
 
+// Endpoint to receive the command from the frontend
+app.post('/fetch-presets', (req, res) => {
+    const cameraName = req.body.cameraName;
+
+    // Listen for Twitch chat messages for 5 seconds
+    listenForMessages(cameraName)
+        .then(presets => {
+            // Send the presets back to the frontend
+            res.json({ presets });
+        })
+        .catch(error => {
+            console.error('Error listening for Twitch messages:', error);
+            res.status(500).json({ error: 'Failed to fetch presets' });
+        });
+});
+
 function listenForMessages(cameraName) {
     return new Promise((resolve, reject) => {
         let messageReceived = false;
@@ -739,12 +758,56 @@ function listenForMessages(cameraName) {
 }
 
 
-// Endpoint to receive the command from the frontend
-app.post('/fetch-presets', (req, res) => {
+function listenForGetInfo(cameraName) {
+    return new Promise((resolve, reject) => {
+        let messageReceived = false;
+
+        const messageListener = (channel, tags, message, self) => {
+            if (self) return; // Ignore messages from the bot itself
+
+            console.log('Received message:', message);
+
+            // Check if the message contains presets
+            if (message.startsWith('PTZ Info')) {
+                console.log('Extracting presets...');
+                // Extract presets and autofocus value from the message
+                const extractedPresets = message.match(/(-?\d*\.?\d+)[^\d-]+(-?\d*\.?\d+)[^\d-]+(-?\d*\.?\d+)(?:[^\d-]+af (on|off))?[^\d-]+(-?\d+)?/);
+
+                console.log('Extracted presets:', extractedPresets);
+                if (extractedPresets) {
+                    // Format the extracted values
+                    const presets = [extractedPresets[1], extractedPresets[2], extractedPresets[3], extractedPresets[4], extractedPresets[5]];
+                    console.log('Formatted presets:', presets);
+                    resolve(presets);
+                    messageReceived = true;
+                }
+            }
+        };
+
+        // Listen for Twitch chat messages for 5 seconds
+        client.on('message', messageListener);
+
+        // Stop listening after 5 seconds
+        const timeout = setTimeout(() => {
+            client.off('message', messageListener); // Remove the message listener
+            if (!messageReceived) {
+                console.log('No presets found within the timeout period');
+                resolve([]); // Resolve with an empty array if no message received
+            }
+        }, 5000);
+    })
+    .catch(error => {
+        console.error('Error in listenForMessages:', error);
+        // Handle any errors encountered during message listening
+        throw error; // Rethrow the error to propagate it to the caller
+    });
+}
+
+app.post('/fetch-getinfo', (req, res) => {
     const cameraName = req.body.cameraName;
 
     // Listen for Twitch chat messages for 5 seconds
-    listenForMessages(cameraName)
+    listenForGetInfo(cameraName)
         .then(presets => {
             // Send the presets back to the frontend
             res.json({ presets });
@@ -783,8 +846,7 @@ app.post('/add-sync-presets', (req, res) => {
         }
 
         camerasData.cameras[cameraIndex].presets.push(...newPresets);
-
-        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData), 'utf8', (writeErr) => {
+        fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData, null, 2), 'utf8', (writeErr) => {
             if (writeErr) {
                 console.error('Error writing cameras data:', writeErr);
                 return res.status(500).send('Error writing cameras data');
@@ -796,6 +858,172 @@ app.post('/add-sync-presets', (req, res) => {
     });
 });
 
+
+function listenForVolumeLevels() {
+    return new Promise((resolve, reject) => {
+        let messageReceived = false;
+
+        const messageListener = (channel, tags, message, self) => {
+            if (self) return; // Ignore messages from the bot itself
+
+            console.log('Received message:', message);
+
+            // Check if the message contains volume levels
+            if (message.startsWith('Volumes:')) {
+                console.log('Extracting volume levels...');
+                // Extract volume levels from the message
+                const extractedVolumes = message.match(/(\w+) - (-?\d+m|\d+)/g);
+                console.log('Extracted volumes:', extractedVolumes);
+                if (extractedVolumes) {
+                    resolve(extractedVolumes);
+                    messageReceived = true;
+                }
+            }
+        };
+
+        // Listen for Twitch chat messages for 5 seconds
+        client.on('message', messageListener);
+
+        // Stop listening after 5 seconds
+        const timeout = setTimeout(() => {
+            client.off('message', messageListener); // Remove the message listener
+            if (!messageReceived) {
+                console.log('No volume levels found within the timeout period');
+                resolve([]); // Resolve with an empty array if no message received
+            }
+        }, 5000);
+    })
+    .catch(error => {
+        console.error('Error in listenForVolumeLevels:', error);
+        throw error; // Rethrow the error to propagate it to the caller
+    });
+}
+
+app.post('/fetch-volume-levels', (req, res) => {
+    // Listen for Twitch chat messages for 5 seconds
+    listenForVolumeLevels()
+        .then(volumeLevels => {
+            // Send the volume levels back to the frontend
+            res.json({ volumeLevels });
+        })
+        .catch(error => {
+            console.error('Error listening for Twitch messages:', error);
+            res.status(500).json({ error: 'Failed to fetch volume levels' });
+        });
+});
+
+
+function readHotkeysFile() {
+    const hotkeysFilePath = path.join(__dirname, 'public', 'hotkeys.json');
+    try {
+        const hotkeysData = fs.readFileSync(hotkeysFilePath, 'utf8');
+        return JSON.parse(hotkeysData) || {}; // Return empty object if file is empty
+    } catch (error) {
+        console.error('Error reading hotkeys file:', error);
+        return {};
+    }
+}
+
+function readCustomHotkeysFile() {
+    const hotkeysFilePath = path.join(__dirname, 'public', 'custom-hotkeys.json');
+    try {
+        const hotkeysData = fs.readFileSync(hotkeysFilePath, 'utf8');
+        return JSON.parse(hotkeysData) || {}; // Return empty object if file is empty
+    } catch (error) {
+        console.error('Error reading hotkeys file:', error);
+        return {};
+    }
+}
+
+function writeHotkeysFile(hotkeys) {
+    const hotkeysFilePath = path.join(__dirname, 'public', 'hotkeys.json');
+    try {
+        // Read existing hotkeys data
+        const existingHotkeys = readHotkeysFile();
+        // Merge existing data with new hotkeys
+        const mergedHotkeys = { ...existingHotkeys, ...hotkeys };
+        // Write merged hotkeys data to file
+        fs.writeFileSync(hotkeysFilePath, JSON.stringify(mergedHotkeys, null, 2), 'utf8');
+        console.log('Hotkeys file updated successfully');
+    } catch (error) {
+        console.error('Error writing hotkeys file:', error);
+    }
+}
+
+function writeCustomHotkeysFile(hotkeys) {
+    const hotkeysFilePath = path.join(__dirname, 'public', 'custom-hotkeys.json');
+    try {
+        // Read existing hotkeys data
+        const existingHotkeys = readCustomHotkeysFile();
+        // Merge existing data with new hotkeys
+        const mergedHotkeys = { ...existingHotkeys, ...hotkeys };
+        // Write merged hotkeys data to file
+        fs.writeFileSync(hotkeysFilePath, JSON.stringify(mergedHotkeys, null, 2), 'utf8');
+        console.log('Hotkeys file updated successfully');
+    } catch (error) {
+        console.error('Error writing hotkeys file:', error);
+    }
+}
+
+app.post('/save-custom-hotkey', (req, res) => {
+    const { cameraName, preset, hotkey } = req.body;
+    console.log('Received request to save hotkey:', { cameraName, preset, hotkey });
+
+    // Read hotkeys file
+    let hotkeys = readCustomHotkeysFile();
+
+    // Update or add the hotkey for the preset
+    if (!hotkeys[cameraName]) {
+        hotkeys[cameraName] = {};
+    }
+    hotkeys[cameraName][preset] = hotkey;
+
+    // Write hotkeys file
+    writeCustomHotkeysFile(hotkeys);
+    console.log('Hotkeys updated:', hotkeys);
+
+    // Respond with success message
+    res.status(200).json({ message: 'Hotkey saved successfully' });
+});
+
+app.post('/save-hotkey', (req, res) => {
+    const { cameraName, preset, hotkey } = req.body;
+    console.log('Received request to save hotkey:', { cameraName, preset, hotkey });
+
+    // Read hotkeys file
+    let hotkeys = readHotkeysFile();
+
+    // Update or add the hotkey for the preset
+    if (!hotkeys[cameraName]) {
+        hotkeys[cameraName] = {};
+    }
+    hotkeys[cameraName][preset] = hotkey;
+
+    // Write hotkeys file
+    writeHotkeysFile(hotkeys);
+    console.log('Hotkeys updated:', hotkeys);
+
+    // Respond with success message
+    res.status(200).json({ message: 'Hotkey saved successfully' });
+});
+
+// Route to get all hotkeys
+app.get('/hotkeys', (req, res) => {
+    // Read hotkeys file
+    const hotkeys = readHotkeysFile();
+    
+    // Respond with the hotkeys data
+    res.json(hotkeys);
+});
+
+// Route to get all hotkeys
+app.get('/custom-hotkeys', (req, res) => {
+    // Read hotkeys file
+    const hotkeys = readCustomHotkeysFile();
+    
+    // Respond with the hotkeys data
+    res.json(hotkeys);
+});
 
 // Server listening on port 3000
 app.listen(port, () => {
