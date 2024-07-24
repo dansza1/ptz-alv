@@ -1,3 +1,18 @@
+v1.5
+- Added search for presets
+- Added config setting to disable Full PTZ permission features
+- Added zoom control for regular PTZ permissions
+- Added ability to collapse side modules by clicking the label
+- Added experimental feature to click the video stream to move the camera (full ptz perms)
+	- Click the hand icon top right of screen to switch from list/grid view to video view.
+	- Select camera, enter zoom (if required) in the zoom module, click in the box on the stream for the camera you selected	
+	- Click "Area select" button to enable box drawing for automatic click and zoom
+- Added experimental module to interface with MPV for clicking (full ptz perms)
+- Added IR control buttons (full ptz perms)
+- Added resetcam button (full ptz perms)
+- Added quick swap buttons for marms (marmin-marmout), crows (crowin-crowout), wolves (wolf-wolfcorner), wolfin (wolf-wolfindoor), wden (wolf-wolfden)
+- Added updated preset screenshots (credit to Taizun)
+
 v1.4:
 - Added hotkeys for presets
 - Added sound mixer for volume control

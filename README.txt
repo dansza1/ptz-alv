@@ -17,6 +17,8 @@ Alveus PTZ Control
 - Click the Settings cog next to "Alveus PTZ" and then "Twitch Settings".
   Enter your twitch name and OAuth key
 
+- Under "Inteface Settings" tick "Enable Full PTZ Perms" if you have ptzmove / ptztilt etc perms.
+
 Upgrade NOTE:
   Do not overwrite your existing config.json, public/cameras.json, and public/custom-presets.json files with the template files from GitHub.
   These files contain your custom configurations and presets. Overwriting them will revert your settings to the default values provided in the template files.

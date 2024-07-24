@@ -1,8 +1,7 @@
 {
     "twitch": {
-        "username": "twitchname",
+        "username": "username",
         "channel": "alveusgg",
         "oauthKey": ""
     }
 }
-

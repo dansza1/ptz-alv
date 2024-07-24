@@ -1,167 +1,263 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alveus PTZ</title>
-    <!-- Cache-busting query parameter added to stylesheet -->
     <link rel="icon" type="image/x-icon" href="./img/favicon.ico">
     <link rel="stylesheet" type="text/css" href="styles.css?v=1">
 </head>
 
 <body>
-<div class="heading-container">
-    <div class="logo">
-        <img src="/img/logo.webp" alt="Logo">
-    </div>
+    <div class="heading-container">
+        <div class="logo">
+            <img src="/img/logo.webp" alt="Logo">
+        </div>
 
-    <h1 class="ptz-heading">
-        Alveus PTZ 
-        <a href="admin.html">
-            <img src="/img/settings.png" alt="Admin Settings" class="admin-icon">
-        </a>
-    </h1>
+        <h1 class="ptz-heading">
+            Alveus PTZ
+            <a href="admin.html">
+                <img src="/img/settings.png" alt="Admin Settings" class="admin-icon">
+            </a>
+        </h1>
+        <span id="commandDisplay" class="command-display"></span>
         <span class="layout-icons">
-        <span id="listIcon" class="list-icon"></span> 
-        <span id="gridIcon" class="grid-icon"></span> 
-        </span> 
-</div>
+            <span id="listIcon" class="list-icon"></span>
+            <span id="gridIcon" class="grid-icon"></span>
+            <span id="vidIcon" class="vid-icon"></span>
+        </span>
+    </div>
     <!-- Main container for direction-pad and preset-pad -->
     <div class="container">
-    <div class="left-menu">
-        <div class="direction-and-ptz-container">
-            <!-- Container for cameras list -->
-            <h2 class="label">Camera</h2>
-            <div class="camera-container" id="cameraContainer"></div>
-
-            <!-- Direction buttons -->
-        
-
-	<div class="direction-container">
-        <div class="pad-heading-container">
-            <h2 class="direction-move-heading" id="movePadHeading" style="cursor: pointer;" onclick="togglePad('.direction-pad'); setActiveHeading('.direction-move-heading');">Move</h2>
-            <h2 class="direction-pan-heading" id="panTiltPadHeading" style="cursor: pointer;" onclick="togglePad('.pantilt-pad'); setActiveHeading('.direction-pan-heading');">PanTilt</h2>
-        </div>
-            <div class="direction-pad">
-                <button class="arrow-button" onclick="sendDirectionCommand('upleft')" onmousedown="animateButton(this)">↖</button>
-                <button class="arrow-button" onclick="sendDirectionCommand('up')" onmousedown="animateButton(this)">▲</button>
-                <button class="arrow-button" onclick="sendDirectionCommand('upright')" onmousedown="animateButton(this)">↗</button>
-                <button class="arrow-button" onclick="sendDirectionCommand('left')" onmousedown="animateButton(this)">◀</button>
-                <button class="arrow-button" onclick="sendDirectionCommand('')" onmousedown="animateButton(this)"></button>
-                <button class="arrow-button" onclick="sendDirectionCommand('right')" onmousedown="animateButton(this)">▶</button>
-                <button class="arrow-button" onclick="sendDirectionCommand('downleft')" onmousedown="animateButton(this)">↙</button>
-                <button class="arrow-button" onclick="sendDirectionCommand('down')" onmousedown="animateButton(this)">▼</button>
-                <button class="arrow-button" onclick="sendDirectionCommand('downright')" onmousedown="animateButton(this)">↘</button>
-            </div>
-    
-
-
-    <div class="pantilt-pad hidden">
-         <button class="arrow-button"></button>
-         <button class="ptz-arrow-button" onclick="sendptzpadCommand('up')" onmousedown="animateButton(this)">▲</button>
-         <button class="arrow-button"></button>
-         <button class="ptz-arrow-button" onclick="sendptzpadCommand('left')" onmousedown="animateButton(this)">◀</button>
-         <button class="ptz-arrow-button" id="sliderValueLabel" onclick="toggleValues()">1</button>
-         <button class="ptz-arrow-button" onclick="sendptzpadCommand('right')" onmousedown="animateButton(this)">▶</button>
-         <button class="arrow-button"></button>
-         <button class="ptz-arrow-button" onclick="sendptzpadCommand('down')" onmousedown="animateButton(this)">▼</button>
-         <button class="arrow-button"></button>
-     </div>
-        </div>
-
-            <!-- PTZ input buttons -->
-        <div class="direction-container">
-            <h2 class="direction-heading" style="cursor: pointer;" onclick="toggleDirectionPad('.ptz-container')">- PTZ</h2>
-            <div class="ptz-container">
-                <div class="ptz-input-wrapper">
-                    <input type="text" id="panInput" class="ptz-input" placeholder="Pan">
-                    <input type="text" id="tiltInput" class="ptz-input" placeholder="Tilt">
-                    <input type="text" id="zoomInput" class="ptz-input" placeholder="Zoom">
-                </div>
-                <button class="send-button" onclick="sendPanTiltZoom()" onmousedown="animateButton(this)">Send</button>
-            </div>
-            </div>
-
-            <!-- Swap buttons -->
-        <div class="direction-container">
-            <h2 class="direction-heading" style="cursor: pointer;" onclick="toggleDirectionPad('.swap-container')">- Swap</h2>
-            <div class="swap-container">
-                <div class="swap-buttons">
-                    <button class="swap-num-button" onclick="setSwapNumber(2)">2</button>
-                    <button class="swap-num-button" onclick="setSwapNumber(3)">3</button>
-                    <button class="swap-num-button" onclick="setSwapNumber(4)">4</button>
-                    <button class="swap-num-button" onclick="setSwapNumber(5)">5</button>
-                    <button class="swap-num-button" onclick="setSwapNumber(6)">6</button>
+        <div class="left-menu">
+            <div class="direction-and-ptz-container">
+                <!-- Container for cameras list -->
+                <div class="direction-container">
+                    <h2 class="direction-heading-camera">- Cameras -</h2>
+                    <div class="camera-container" id="cameraContainer"></div>
                 </div>
 
-                <div class="dropdown-container">
-                    <div class="swap-dropdown1">
-                        <select id="swap-dropdown1">
-                            <option value="option1">-Select-</option>
-                            <!-- Add more options as needed -->
-                        </select>
+                <!-- Direction buttons -->
+                <div class="direction-container" id="directionpadContainer" style="display: none;">
+                    <h2 class="direction-heading" style="cursor: pointer;"
+                        onclick="toggleDirectionPad('.direction-pad-outer')">- Direction -</h2>
+                    <div class="direction-pad-outer">
+                        <div class="pad-heading-container">
+                            <h2 class="direction-move-heading" id="movePadHeading" style="cursor: pointer;"
+                                onclick="togglePad('.direction-pad'); setActiveHeading('.direction-move-heading');">Move
+                            </h2>
+                            <h2 class="direction-pan-heading" id="panTiltPadHeading" style="cursor: pointer;"
+                                onclick="togglePad('.pantilt-pad'); setActiveHeading('.direction-pan-heading');">PanTilt
+                            </h2>
+                            <h2 class="direction-zoom-heading" id="panTiltPadHeading" style="cursor: pointer;"
+                                onclick="togglePad('.zoom-pad'); setActiveHeading('.direction-zoom-heading');">Zoom
+                            </h2>
+                        </div>
+                        <div class="direction-container-inner">
+
+                            <div class="direction-pad">
+                                <button class="arrow-button" onclick="sendDirectionCommand('upleft')"
+                                    onmousedown="animateButton(this)">↖</button>
+                                <button class="arrow-button" onclick="sendDirectionCommand('up')"
+                                    onmousedown="animateButton(this)">▲</button>
+                                <button class="arrow-button" onclick="sendDirectionCommand('upright')"
+                                    onmousedown="animateButton(this)">↗</button>
+                                <button class="arrow-button" onclick="sendDirectionCommand('left')"
+                                    onmousedown="animateButton(this)">◀</button>
+                                <button class="arrow-button" onclick="sendDirectionCommand('')"
+                                    onmousedown="animateButton(this)"></button>
+                                <button class="arrow-button" onclick="sendDirectionCommand('right')"
+                                    onmousedown="animateButton(this)">▶</button>
+                                <button class="arrow-button" onclick="sendDirectionCommand('downleft')"
+                                    onmousedown="animateButton(this)">↙</button>
+                                <button class="arrow-button" onclick="sendDirectionCommand('down')"
+                                    onmousedown="animateButton(this)">▼</button>
+                                <button class="arrow-button" onclick="sendDirectionCommand('downright')"
+                                    onmousedown="animateButton(this)">↘</button>
+                            </div>
+
+                            <div class="pantilt-pad hidden">
+                                <button class="arrow-button"></button>
+                                <button class="ptz-arrow-button" onclick="sendptzpadCommand('up')"
+                                    onmousedown="animateButton(this)">▲</button>
+                                <button class="arrow-button"></button>
+                                <button class="ptz-arrow-button" onclick="sendptzpadCommand('left')"
+                                    onmousedown="animateButton(this)">◀</button>
+                                <button class="ptz-arrow-button" id="sliderValueLabel"
+                                    onclick="toggleValues()">1</button>
+                                <button class="ptz-arrow-button" onclick="sendptzpadCommand('right')"
+                                    onmousedown="animateButton(this)">▶</button>
+                                <button class="arrow-button"></button>
+                                <button class="ptz-arrow-button" onclick="sendptzpadCommand('down')"
+                                    onmousedown="animateButton(this)">▼</button>
+                                <button class="arrow-button"></button>
+                            </div>
+                            <div class="zoom-pad hidden">
+                                <button class="arrow-button"></button>
+                                <button class="ptz-arrow-button" onclick="sendpadZoom('plus')"
+                                    onmousedown="animateButton(this)">+</button>
+                                <button class="arrow-button"></button>
+                                <button class="ptz-arrow-button" onclick="decrementZoom()"
+                                    onmousedown="animateButton(this)">◀</button>
+                                <button class="ptz-arrow-button" id="sliderZoomLabel">0</button>
+                                <button class="ptz-arrow-button" onclick="incrementZoom()"
+                                    onmousedown="animateButton(this)">▶</button>
+                                <button class="arrow-button"></button>
+                                <button class="ptz-arrow-button" onclick="sendpadZoom('minus')"
+                                    onmousedown="animateButton(this)">-</button>
+                                <button class="arrow-button"></button>
+                            </div>
+                        </div>
+
                     </div>
-                    <div class="swap-dropdown2">
-                        <select id="swap-dropdown2">
-                            <option value="option1">-Select-</option>
-                            <!-- Add more options as needed -->
-                        </select>
+                </div>
+
+                <!-- Zoom input buttons -->
+                <div class="direction-container">
+                    <h2 class="direction-heading" style="cursor: pointer;"
+                        onclick="toggleDirectionPad('.zoom-container')">- Zoom - </h2>
+                    <div class="zoom-container">
+                        <div class="zoom-slider-wrapper">
+                            <input type="range" min="-100" max="100" value="0" step="5" class="slider" id="zoomSlider">
+                            <input type="text" id="zoomInput" class="zoominput" placeholder="Zoom" min="1" max="100">
+                        </div>
+                        <div class="ptz-input-wrapper">
+                        </div>
+                        <button class="send-button" onclick="sendZoom()" onmousedown="animateButton(this)">Send</button>
                     </div>
                 </div>
 
-                <div class="swap-wrapper">
-                    <input type="text" id="swap1" class="swap-input" placeholder="Swap 1">
-                    <input type="text" id="swap2" class="swap-input" placeholder="Swap 2">
+                <!-- PTZ input buttons -->
+                <div class="direction-container" id="ptzContainer" style="display: none;">
+                    <h2 class="direction-heading" style="cursor: pointer;"
+                        onclick="toggleDirectionPad('.ptz-container')">- PTZ -</h2>
+                    <div class="ptz-container">
+                        <div class="ptz-input-wrapper">
+                            <input type="text" id="panInput" class="ptz-input" placeholder="Pan">
+                            <input type="text" id="tiltInput" class="ptz-input" placeholder="Tilt">
+                            <input type="text" id="zoomPTZInput" class="ptz-input" placeholder="Zoom">
+                        </div>
+                        <button class="send-button" onclick="sendPanTiltZoom()"
+                            onmousedown="animateButton(this)">Send</button>
+                    </div>
                 </div>
-                <button class="swap-button" onclick="sendSwapCommand()" onmousedown="animateButton(this)">Swap</button>
-            </div>
-            </div>
 
-            <!-- Focus buttons -->
-        <div class="direction-container">
-            <h2 class="direction-heading" style="cursor: pointer;" onclick="toggleDirectionPad('.focus-container')">- Focus</h2>
-            <div class="focus-container">
-                <div class="focus-wrapper">
-                    <input type="text" id="focus" class="focus-input" placeholder="Focus">
-                    <button class="autofocus-button" onclick="sendAutoFocusCommand()"></button>
+                <!-- Swap buttons -->
+                <div class="direction-container">
+                    <h2 class="direction-heading" style="cursor: pointer;"
+                        onclick="toggleDirectionPad('.swap-container')">- Swap -</h2>
+                    <div class="swap-container">
+                        <div class="swap-buttons">
+                            <button class="swap-num-button" onclick="setSwapNumber(2)">2</button>
+                            <button class="swap-num-button" onclick="setSwapNumber(3)">3</button>
+                            <button class="swap-num-button" onclick="setSwapNumber(4)">4</button>
+                            <button class="swap-num-button" onclick="setSwapNumber(5)">5</button>
+                            <button class="swap-num-button" onclick="setSwapNumber(6)">6</button>
+                        </div>
+                        <div class="swap-preset-buttons">
+                            <button class="swap-preset-button" onclick="setPresetSwap('fox')">fox</button>
+                            <button class="swap-preset-button" onclick="setPresetSwap('crow')">crow</button>
+                            <button class="swap-preset-button" onclick="setPresetSwap('marm')">marm</button>
+                            <button class="swap-preset-button" onclick="setPresetSwap('wolf')">wolf</button>
+                            <button class="swap-preset-button" onclick="setPresetSwap('wolfin')">wolfin</button>
+                            <button class="swap-preset-button" onclick="setPresetSwap('wden')">wden</button>
+                        </div>
+                        <div class="dropdown-container">
+                            <div class="swap-dropdown1">
+                                <select id="swap-dropdown1">
+                                    <option value="option1">-Select-</option>
+                                </select>
+                            </div>
+                            <div class="swap-dropdown2">
+                                <select id="swap-dropdown2">
+                                    <option value="option1">-Select-</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="swap-wrapper">
+                            <input type="text" id="swap1" class="swap-input" placeholder="Swap 1">
+                            <input type="text" id="swap2" class="swap-input" placeholder="Swap 2">
+                        </div>
+                        <button class="swap-button" onclick="sendSwapCommand()"
+                            onmousedown="animateButton(this)">Swap</button>
+                    </div>
                 </div>
-                <button class="focus-button" onclick="sendFocusCommand()" onmousedown="animateButton(this)">Focus</button>
-            </div>
 
-          </div>
+                <!-- Focus buttons -->
+                <div class="direction-container">
+                    <h2 class="direction-heading" style="cursor: pointer;"
+                        onclick="toggleDirectionPad('.focus-container')">- Focus -</h2>
+                    <div class="focus-container">
+                        <div class="focus-wrapper">
+                            <input type="text" id="focus" class="focus-input" placeholder="Focus">
+                            <button class="autofocus-button" onclick="sendAutoFocusCommand()"></button>
+                        </div>
+                        <button class="focus-button" onclick="sendFocusCommand()"
+                            onmousedown="animateButton(this)">Focus</button>
+                    </div>
 
-          <div class="direction-container">
-            <h2 class="direction-heading" style="cursor: pointer;" onclick="toggleDirectionPad('.other-container')">- Other</h2>
-            <div class="other-container">
-                <div class="other-wrapper">
-                    <button class="volume-button" onclick="sendVolumeControl()"></button>
+                </div>
+
+                <!-- IR buttons -->
+                <div class="direction-container" id="irContainer" style="display: none;">
+                    <h2 class="direction-heading" style="cursor: pointer;"
+                        onclick="toggleDirectionPad('.ir-container')">- IR -</h2>
+                    <div class="ir-container">
+                        <div class="ir-wrapper">
+                            <button class="ir-auto-button" onclick="sendIRcommand('auto')">Auto</button>
+                            <button class="ir-on-button" onclick="sendIRcommand('on')">On</button>
+                            <button class="ir-off-button" onclick="sendIRcommand('off')">Off</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other buttons -->
+                <div class="direction-container">
+                    <h2 class="direction-heading" style="cursor: pointer;"
+                        onclick="toggleDirectionPad('.other-container')">- Other -</h2>
+                    <div class="other-container">
+                        <div class="other-wrapper">
+                            <button class="volume-button" onclick="sendVolumeControl()"></button>
+                            <button class="reset-button" onclick="sendReset()"></button>
+                            <button class="mpv-button" onclick="startListening(this)" style="display: none;"></button>
+
+                        </div>
+                    </div>
                 </div>
             </div>
-
-          </div>
-
-
         </div>
-        </div>
 
-        <!-- Preset buttons -->
+        <div id="video-placeholder"></div>
+
+        <!-- Preset Container -->
         <div class="preset-container grid-layout">
-        <h2 class="label-preset" style="cursor: pointer;" onclick="toggleDirectionPad('.preset-pad')">
-        Presets
-        </h2>
-            <div class="preset-pad" id="presetPad">
-                <!-- These will be dynamically populated based on the selected camera -->
-            </div>
+            <div class="preset-container-card">
 
+                <div class="preset-header">
+                    <div class="vidbuttondiv" style="display: none;">
+                        <button class="vidbuttons" onclick="toggleVideo('video')">Video</button>
+                        <button class="vidbuttons" onclick="toggleVideo('presets')">Presets</button>
+                    </div>
+                    <h2 class="label-preset-heading" style="cursor: pointer;"
+                        onclick="toggleDirectionPad('.preset-pad')">- Presets -</h2>
+                    <input type="text" id="presetSearch" placeholder="Search..">
+                </div>
 
-            <div class="custom-preset-container">
-                <h2 class="custom-label-preset">Custom Presets</h2>
-                <div class="custom-preset-pad" id="customPresetPad">
+                <div class="preset-pad" id="presetPad">
                     <!-- These will be dynamically populated based on the selected camera -->
                 </div>
+
+
+                <div class="custom-preset-container">
+                    <h2 class="custom-label-preset">- Custom Presets -</h2>
+                    <div class="custom-preset-pad" id="customPresetPad" style="display: none;">
+                        <!-- These will be dynamically populated based on the selected camera -->
+                    </div>
+                </div>
             </div>
         </div>
-
     </div>
 
     <form id="commandForm" action="/send-command" method="post">
@@ -174,8 +270,9 @@
         }
     </script>
 
-    <!-- Cache-busting query parameter added to JavaScript file -->
-    <script src="script.js?v=1"></script>
+    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
 </body>
-</html>
 
+</html>

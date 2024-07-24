@@ -7,6 +7,9 @@ const tmi = require('tmi.js');
 const app = express();
 const port = 3000;
 
+const net = require('net');
+const WebSocket = require('ws');
+
 // Load configuration from config.json
 const config = require('./config.json');
 
@@ -21,6 +24,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Twitch bot configuration
 const client = new tmi.Client({
+    options: {
+        debug: true, // Enable debug logging
+    },
     connection: {
         secure: true,
         reconnect: true
@@ -31,6 +37,7 @@ const client = new tmi.Client({
     },
     channels: [config.twitch.channel]
 });
+
 
 client.connect().catch(console.error);
 
@@ -102,17 +109,12 @@ app.post('/add-preset', (req, res) => {
         }
 
         camerasData.cameras[cameraIndex].presets.push(newPresetName);
-
-
-
             fs.writeFile(path.join(__dirname, 'public', 'cameras.json'), JSON.stringify(camerasData, null, 2), 'utf8', (writeErr) => {
                 if (writeErr) {
                     console.error('Error writing cameras data:', writeErr);
                     return res.status(500).send('Error writing cameras data');
                 }
             
-            
-
             console.log('Preset added successfully:', newPresetName);
             res.send('Preset added successfully');
         });
@@ -695,7 +697,7 @@ app.post('/send-command', (req, res) => {
 // Function to send message to Twitch chat
 function sendMessage(message) {
     // Check if the command contains !ptzmove and matches the last command
-    if ((message.includes('!ptzmove') || message.includes('!ptzset') || message.includes('!swap')) && message === lastCommand) {
+    if ((message.includes('!ptzmove') || message.includes('!ptzzoom') || message.includes('!ptzfocusr') || message.includes('!ptzset') || message.includes('!swap')) && message === lastCommand) {
     message += " ."; // Add " ." to the end of the message
     }
     client.say(config.twitch.channel, message);
@@ -723,40 +725,57 @@ app.post('/fetch-presets', (req, res) => {
 function listenForMessages(cameraName) {
     return new Promise((resolve, reject) => {
         let messageReceived = false;
+        let accumulatedMessage = '';
+        const presetUser = 'alveussanctuary';
+        let lastMessageTime = Date.now();
 
-        // Listen for Twitch chat messages
+        console.log('Starting to listen for messages...');
+
         client.on('message', (channel, tags, message, self) => {
             if (self) return; // Ignore messages from the bot itself
 
-            // Check if the message contains presets
-            if (message.startsWith('PTZ Presets:')) {
-                // Extract presets from the message
-                const presets = message.substring(12).split(',');
-                resolve(presets);
-                messageReceived = true;
+            console.log(`Message from ${tags.username}: ${message}`);
+
+            if (tags.username.toLowerCase() === presetUser.toLowerCase()) {
+                if (message.startsWith('PTZ Presets:')) {
+                    accumulatedMessage = message.substring(12).trim();
+                    messageReceived = true;
+                    lastMessageTime = Date.now();
+                    console.log('Initial preset message received:', accumulatedMessage);
+                } else if (messageReceived) {
+                    accumulatedMessage += message.trim();
+                    lastMessageTime = Date.now();
+                    console.log('Accumulating message:', message.trim());
+                }
             }
         });
 
+        const checkInterval = setInterval(() => {
+            if (messageReceived && (Date.now() - lastMessageTime) > 1000) { // 1 second of inactivity
+                clearInterval(checkInterval);
+                const presets = accumulatedMessage.split(',').map(preset => preset.trim());
+                console.log('Final accumulated presets:', presets);
+                resolve(presets);
+            }
+        }, 500); // Check every 500ms
+
         // Stop listening after 5 seconds
-        const timeout = setTimeout(() => {
-            if (!messageReceived) {
+        setTimeout(() => {
+            clearInterval(checkInterval);
+            if (messageReceived) {
+                const presets = accumulatedMessage.split(',').map(preset => preset.trim());
+                console.log('Final accumulated presets (timeout):', presets);
+                resolve(presets);
+            } else {
                 console.log('No presets found within the timeout period');
                 resolve([]); // Resolve with an empty array if no message received
             }
         }, 5000);
-
-        // Clear the timeout if presets are received before the timeout
-        client.once('message', () => {
-            clearTimeout(timeout);
-        });
-    })
-    .catch(error => {
+    }).catch(error => {
         console.error('Error in listenForMessages:', error);
-        // Handle any errors encountered during message listening
-        throw error; // Rethrow the error to propagate it to the caller
+        throw error;
     });
 }
-
 
 function listenForGetInfo(cameraName) {
     return new Promise((resolve, reject) => {
@@ -764,19 +783,25 @@ function listenForGetInfo(cameraName) {
 
         const messageListener = (channel, tags, message, self) => {
             if (self) return; // Ignore messages from the bot itself
-
+        
             console.log('Received message:', message);
-
+        
             // Check if the message contains presets
             if (message.startsWith('PTZ Info')) {
                 console.log('Extracting presets...');
                 // Extract presets and autofocus value from the message
-                const extractedPresets = message.match(/(-?\d*\.?\d+)[^\d-]+(-?\d*\.?\d+)[^\d-]+(-?\d*\.?\d+)(?:[^\d-]+af (on|off))?[^\d-]+(-?\d+)?/);
-
+                const extractedPresets = message.match(/(-?\d*\.?\d+|n\/a)[^\d-]+(-?\d*\.?\d+|n\/a)[^\d-]+(-?\d*\.?\d+|n\/a)(?:[^\d-]+af (on|off|n\/a))?[^\d-]+(-?\d+|n\/a)?/);
+        
                 console.log('Extracted presets:', extractedPresets);
                 if (extractedPresets) {
-                    // Format the extracted values
-                    const presets = [extractedPresets[1], extractedPresets[2], extractedPresets[3], extractedPresets[4], extractedPresets[5]];
+                    // Format the extracted values, replace 'n/a' with null
+                    const presets = [
+                        extractedPresets[1] !== 'n/a' ? extractedPresets[1] : null,
+                        extractedPresets[2] !== 'n/a' ? extractedPresets[2] : null,
+                        extractedPresets[3] !== 'n/a' ? extractedPresets[3] : null,
+                        extractedPresets[4] !== 'n/a' ? extractedPresets[4] : null,
+                        extractedPresets[5] !== 'n/a' ? extractedPresets[5] : null
+                    ];
                     console.log('Formatted presets:', presets);
                     resolve(presets);
                     messageReceived = true;
@@ -1024,6 +1049,67 @@ app.get('/custom-hotkeys', (req, res) => {
     // Respond with the hotkeys data
     res.json(hotkeys);
 });
+
+
+
+// Endpoint to receive PTZ commands
+app.post('/ptz-command', (req, res) => {
+    const { clickX, clickY, ptzCommand } = req.body;
+  
+    // Check if all required data is provided
+    if (typeof clickX === 'undefined' || typeof clickY === 'undefined' || !ptzCommand) {
+      return res.status(400).json({ error: 'Invalid or missing parameters' });
+    }
+  
+    try {
+      // Log relevant information to Node.js console
+      console.log(`Received click coordinates: x = ${clickX}%, y = ${clickY}%`);
+      console.log(`PTZ Command: ${ptzCommand}`);
+  
+      res.status(200).json({ status: 'success' });
+    } catch (error) {
+      console.error("Error processing PTZ command:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+
+// Create a TCP server
+const server = net.createServer((socket) => {
+  console.log('Client connected');
+
+  socket.on('data', (data) => {
+    try {
+      const parsedData = JSON.parse(data.toString());
+      console.log('Parsed data:', parsedData);
+
+      // Broadcast the parsed data to all connected WebSocket clients
+      wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(parsedData));
+        }
+      });
+    } catch (error) {
+      console.error('Error parsing data:', error);
+    }
+  });
+
+  socket.on('end', () => {
+    console.log('Client disconnected');
+  });
+});
+
+server.listen(8080, () => {
+  console.log('TCP server is listening on port 8080');
+});
+
+// WebSocket server setup
+const wss = new WebSocket.Server({ port: 8081 });
+wss.on('connection', (ws) => {
+  console.log('WebSocket client connected');
+});
+
+console.log('WebSocket server is listening on port 8081');
+
 
 // Server listening on port 3000
 app.listen(port, () => {

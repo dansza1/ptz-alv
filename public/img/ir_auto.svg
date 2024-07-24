@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .outer-card {
+            background-color: #2c2c2c; /* Lighter color for the outer card */
+            border-radius: 20px; /* Rounded corners for the outer card */
+            padding: 20px 10px; /* 20px top and bottom, 10px left and right */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 200px; /* Adjusted width to accommodate inner box */
+            position: relative; /* For positioning the label */
+        }
+
+        .camera-container {
+            display: flex;
+            flex-direction: column; /* Display buttons in a vertical list */
+            align-items: flex-start; /* Align buttons to the start of the container */
+            background-color: #222222; /* Set background color for the whole box */
+            padding: 0px;
+            border-radius: 15px; /* Rounded corners */
+            border: none; /* Remove border */ 
+            width: 172px; /* Set width of the container */
+            height: 282px; /* Set the height to 282px */
+            overflow-y: auto; /* Make the container scrollable vertically */
+        }
+
+        .camera-button {
+            width: 100%; /* Ensure buttons take full width of container */
+            height: 40px; /* Set a fixed height for buttons */
+            margin-top: 5px;
+            margin-bottom: 5px; /* Adjust spacing between buttons */
+            color: white; /* Text color */
+            background-color: #333333; /* Slightly lighter background color */
+            border: none; /* Remove button border */
+            border-radius: 10px; /* Round the corners */
+            cursor: pointer;
+            font-size: 16px;
+            text-align: left; /* Align text to the left */
+            padding-left: 10px; /* Add padding to the left of the button */
+            flex-shrink: 0; /* Prevent the button from shrinking */
+            transition: background-color 0.3s ease; /* Add a transition effect */
+        }
+
+        .camera-button:hover {
+            background-color: #444444; /* Change background color on hover */
+        }
+
+        .svg-container {
+            position: relative; /* Container to position label over SVG */
+            display: inline-block;
+        }
+
+        .svg-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10px;
+            font-family: Impact, sans-serif;
+            color: #d2d2d2;
+        }
+    </style>
+    <title>SVG with CSS Label</title>
+</head>
+<body>
+    <div class="outer-card">
+        <div class="svg-container">
+            <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="#d2d2d2"
+                version="1.1"
+                id="svg4"
+                xmlns="http://www.w3.org/2000/svg">
+                <path d="M 0,3 V 0 H 3 V 1 H 1 v 2 z" id="path31542" />
+                <path d="m 13,0 h 3 V 3 H 15 V 1 h -2 z" id="path31542-7" />
+                <path d="m 16,13 v 3 h -3 v -1 h 2 v -2 z" id="path31542-71" />
+                <path d="M 3,16 H 0 v -3 h 1 v 2 h 2 z" id="path31542-0" />
+            </svg>
+            <span class="svg-label">Auto</span>
+        </div>
+    </div>
+</body>
+</html>
+

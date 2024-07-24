@@ -1,11 +1,11 @@
 [
   {
-    "cameraName": "Pasture",
-    "presetName": "roundpenz",
-    "pan": "-20.19",
-    "tilt": "-2",
-    "zoom": "675",
+    "cameraName": "Parrots",
+    "presetName": "abovedoorzr",
+    "pan": "69.04",
+    "tilt": "-1.07",
+    "zoom": "1143",
     "autoFocus": "on",
-    "focus": ""
+    "focus": "6385"
   }
 ]

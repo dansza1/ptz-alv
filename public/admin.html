@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,17 +11,17 @@
 </head>
 
 <body>
-  <div class="heading-container">
-    <div class="logo">
-        <img src="/img/logo.webp" alt="Logo">
+    <div class="heading-container">
+        <div class="logo">
+            <img src="/img/logo.webp" alt="Logo">
+        </div>
+        <h1 class="ptz-heading">
+            Alveus PTZ
+            <a href="index.html">
+                <img src="/img/settings.png" alt="Admin Settings" class="admin-icon">
+            </a>
+        </h1>
     </div>
-    <h1 class="ptz-heading">
-        Alveus PTZ 
-        <a href="index.html">
-            <img src="/img/settings.png" alt="Admin Settings" class="admin-icon">
-        </a>
-    </h1>
-</div>
 
     <div class="container">
         <div class="direction-and-ptz-container">
@@ -29,9 +30,12 @@
             <div class="camera-container" id="currentCameraList"></div>
             <div class="sidebar">
                 <ul>
-                    <li><a href="#" id="manageCamerasLink" onclick="showCamera()" class="menu-item">Manage Cameras</a></li>
-                    <li><a href="#" id="twitchSettingsLink" onclick="showTwitchSettings()" class="menu-item">Twitch Settings</a></li>
-                    <li><a href="#" id="interfaceSettingsLink" onclick="showInterfaceSettings()" class="menu-item">Interface Settings</a></li>
+                    <li><a href="#" id="manageCamerasLink" onclick="showCamera()" class="menu-item">Manage Cameras</a>
+                    </li>
+                    <li><a href="#" id="twitchSettingsLink" onclick="showTwitchSettings()" class="menu-item">Twitch
+                            Settings</a></li>
+                    <li><a href="#" id="interfaceSettingsLink" onclick="showInterfaceSettings()"
+                            class="menu-item">Interface Settings</a></li>
                 </ul>
             </div>
         </div>
@@ -39,11 +43,11 @@
         <div class="preset-container">
             <h2 class="label-preset">Presets</h2>
             <div id="mainContent" class="main-content-box">
-	    </div> 
+            </div>
         </div>
     </div>
 
     <script src="admin.js?v=1"></script>
 </body>
-</html>
 
+</html>

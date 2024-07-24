@@ -1,7 +1,8 @@
 // admin.js
 
-window.onload = function() {
+window.onload = function () {
     populateCurrentCameras();
+
 };
 
 // Function to fetch current Twitch settings
@@ -40,7 +41,7 @@ function editField(fieldId) {
 
     // Show a prompt dialog for editing the field
     const newValue = prompt(`Enter new value for ${fieldId}:`, currentValue);
-    
+
     // If user clicked cancel or entered an empty value, do nothing
     if (newValue === null || newValue.trim() === '') {
         return;
@@ -71,16 +72,16 @@ function saveTwitchSettings() {
             oauthKey: twitchOAuthKey
         })
     })
-    .then(response => {
-        if (response.ok) {
-            console.log('Twitch settings saved successfully');
-            // Optionally, update UI or show a success message
-        } else {
-            console.error('Failed to save Twitch settings');
-            // Optionally, show an error message
-        }
-    })
-    .catch(error => console.error('Error saving Twitch settings:', error));
+        .then(response => {
+            if (response.ok) {
+                console.log('Twitch settings saved successfully');
+                // Optionally, update UI or show a success message
+            } else {
+                console.error('Failed to save Twitch settings');
+                // Optionally, show an error message
+            }
+        })
+        .catch(error => console.error('Error saving Twitch settings:', error));
 }
 
 function showTwitchSettings() {
@@ -160,6 +161,18 @@ function showInterfaceSettings() {
                 <input type="checkbox" class="edit-checkbox" id="arrowKeyCheckbox" checked>
                 </td>
             </tr>
+             <tr>
+                <td><label class="field-label">Enable MPV Click</label></td>
+                <td>
+                <input type="checkbox" class="edit-checkbox" id="MPVCheckbox" checked>
+                </td>
+            </tr>            
+            <tr>
+                <td><label class="field-label">Enable Full PTZ Perms</label></td>
+                <td>
+                <input type="checkbox" class="edit-checkbox" id="FullPTZCheckbox" checked>
+                </td>
+            </tr>            
         </table>
     `;
 
@@ -169,58 +182,72 @@ function showInterfaceSettings() {
     mainContentContainer.appendChild(interfaceSettingsForm);
 
 }
-
-document.getElementById('interfaceSettingsLink').addEventListener('click', function(event) {
+// Event listener for the interface settings link
+document.getElementById('interfaceSettingsLink').addEventListener('click', function (event) {
     event.preventDefault(); // Prevent default link behavior
 
-    // Ensure the checkbox element is created in the DOM
-    const thumbnailCheckbox = document.getElementById('thumbnailCheckbox');
-    if (thumbnailCheckbox) {
-        // Function to save the checkbox state to localStorage
-        const saveCheckboxState = () => {
-            localStorage.setItem('thumbnailVisibility', thumbnailCheckbox.checked);
-        };
+    // Function to set up a checkbox with localStorage persistence
+    const setupCheckbox = (checkboxId, storageKey, onChangeCallback) => {
+        const checkbox = document.getElementById(checkboxId);
+        if (checkbox) {
+            // Function to save the checkbox state to localStorage
+            const saveCheckboxState = () => {
+                localStorage.setItem(storageKey, checkbox.checked);
+                if (onChangeCallback) onChangeCallback(checkbox.checked);
+            };
 
-        // Check if there is a previous selection stored in localStorage
-        const savedThumbnailVisibility = localStorage.getItem('thumbnailVisibility');
-        if (savedThumbnailVisibility !== null) {
-            thumbnailCheckbox.checked = savedThumbnailVisibility === 'true'; // Set checkbox state based on saved value
+            // Check if there is a previous selection stored in localStorage
+            const savedCheckboxState = localStorage.getItem(storageKey);
+            if (savedCheckboxState !== null) {
+                checkbox.checked = savedCheckboxState === 'true'; // Set checkbox state based on saved value
+                if (onChangeCallback) onChangeCallback(checkbox.checked);
+            }
+
+            // Save checkbox state to localStorage when clicked
+            checkbox.addEventListener('change', saveCheckboxState);
+
+        } else {
+            console.error(`${checkboxId} element not found.`);
+        }
+    };
+
+    // Set up the checkboxes
+    setupCheckbox('thumbnailCheckbox', 'thumbnailVisibility');
+    setupCheckbox('arrowKeyCheckbox', 'arrowKeyCheckboxState');
+    setupCheckbox('FullPTZCheckbox', 'fullPTZCheckboxState', (isChecked) => {
+        // Call the function to toggle direction container defined in script.js
+        if (typeof toggleDirectionContainer === 'function') {
+            toggleDirectionContainer(isChecked);
+        }
+        document.getElementById('interfaceSettingsLink').click();
+        console.log('test');
+    });
+
+    setupCheckbox('MPVCheckbox', 'MPVCheckboxState', (isChecked) => {
+        const fullPTZCheckbox = document.getElementById('FullPTZCheckbox');
+        const mpvCheckbox = document.getElementById('MPVCheckbox');
+
+        // Disable and grey out MPVCheckbox based on Full PTZ state
+        mpvCheckbox.disabled = !fullPTZCheckbox.checked;
+        mpvCheckbox.style.opacity = fullPTZCheckbox.checked ? 1 : 0.5;
+
+        // Uncheck MPVCheckbox only when FullPTZCheckbox is unchecked
+        if (!fullPTZCheckbox.checked) {
+            mpvCheckbox.checked = false;
+            localStorage.setItem('MPVCheckboxState', 'false'); // Update localStorage
+
         }
 
-        // Save checkbox state to localStorage when clicked
-        thumbnailCheckbox.addEventListener('change', saveCheckboxState);
-    } else {
-        console.error('Thumbnail checkbox element not found.');
-    }
-});
 
-document.getElementById('interfaceSettingsLink').addEventListener('click', function(event) {
-    event.preventDefault(); // Prevent default link behavior
 
-    // Ensure the checkbox element is created in the DOM
-    const arrowKeyCheckbox = document.getElementById('arrowKeyCheckbox');
-    if (arrowKeyCheckbox) {
-        // Function to save the checkbox state to localStorage
-        const saveCheckboxState = () => {
-            localStorage.setItem('arrowKeyCheckboxState', arrowKeyCheckbox.checked);
-        };
-
-        // Check if there is a previous selection stored in localStorage
-        const savedCheckboxState = localStorage.getItem('arrowKeyCheckboxState');
-        if (savedCheckboxState !== null) {
-            arrowKeyCheckbox.checked = savedCheckboxState === 'true'; // Set checkbox state based on saved value
+        // Call toggleMPV function (optional) based on initial state
+        if (typeof toggleMPV === 'function') {
+            toggleMPV(isChecked);
         }
+    });
 
-        // Save checkbox state to localStorage when clicked
-        arrowKeyCheckbox.addEventListener('change', saveCheckboxState);
-    } else {
-        console.error('Arrow key checkbox element not found.');
-    }
 });
 
-
-
-// Left Menu with list of Cameras
 function populateCurrentCameras() {
     const currentCameraList = document.getElementById('currentCameraList');
     currentCameraList.innerHTML = '';
@@ -228,6 +255,9 @@ function populateCurrentCameras() {
     fetch('/cameras')
         .then(response => response.json())
         .then(data => {
+            const selectedCamera = localStorage.getItem('selectedCamera');
+            let firstListItem = null;
+
             data.cameras.forEach(camera => {
                 const listItem = document.createElement('li');
                 listItem.textContent = camera.name;
@@ -240,25 +270,35 @@ function populateCurrentCameras() {
                     // Add 'selected' class to the clicked item
                     listItem.classList.add('selected');
 
+                    // Store the selected camera in localStorage
+                    localStorage.setItem('selectedCamera', camera.name);
+
                     // Call the showCameraDetails function or perform any other action
                     showCameraDetails(camera.name);
                 });
                 currentCameraList.appendChild(listItem);
+
+                // Check if this camera is the selected one from localStorage
+                if (camera.name === selectedCamera) {
+                    listItem.classList.add('selected');
+                    showCameraDetails(camera.name);
+                }
+
+                // Store the first list item for automatic selection if no camera is selected
+                if (!firstListItem) {
+                    firstListItem = listItem;
+                }
             });
 
-            // Automatically select the first camera and display its details
-            if (data.cameras.length > 0) {
-                const firstCameraName = data.cameras[0].name;
-                showCameraDetails(firstCameraName);
-
-                // Manually add 'selected' class to the first item in the list
-                const firstListItem = currentCameraList.querySelector('li');
+            // Automatically select the first camera and display its details if none is selected
+            if (!selectedCamera && data.cameras.length > 0) {
                 firstListItem.classList.add('selected');
+                showCameraDetails(data.cameras[0].name);
+                localStorage.setItem('selectedCamera', data.cameras[0].name);
             }
         })
         .catch(error => console.error('Error fetching camera data:', error));
 }
-
 
 // Add Camera button
 function showAddCamera() {
@@ -289,16 +329,16 @@ function editCamera(cameraName) {
         },
         body: JSON.stringify({ oldCameraName: cameraName, newCameraName }),
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to rename camera');
-        }
-        console.log('Camera renamed successfully');
-        document.getElementById('manageCamerasLink').click();
-    })
-    .catch(error => {
-        console.error('Error renaming camera:', error);
-    });
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to rename camera');
+            }
+            console.log('Camera renamed successfully');
+            document.getElementById('manageCamerasLink').click();
+        })
+        .catch(error => {
+            console.error('Error renaming camera:', error);
+        });
 }
 
 
@@ -313,18 +353,18 @@ function deleteCamera(cameraName) {
             },
             body: JSON.stringify({ cameraName }),
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to delete camera');
-            }
-            console.log('Camera deleted successfully');
-            // Optionally, redirect to a different page or perform any other action
-            populateCurrentCameras(); // Refresh the list of current cameras
-            document.getElementById('manageCamerasLink').click();
-        })
-        .catch(error => {
-            console.error('Error deleting camera:', error);
-        });
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to delete camera');
+                }
+                console.log('Camera deleted successfully');
+                // Optionally, redirect to a different page or perform any other action
+                populateCurrentCameras(); // Refresh the list of current cameras
+                document.getElementById('manageCamerasLink').click();
+            })
+            .catch(error => {
+                console.error('Error deleting camera:', error);
+            });
     }
 }
 
@@ -392,6 +432,7 @@ function showCamera() {
 
 // Manage Camera presets table
 function showCameraDetails(cameraName) {
+    const isFullPTZEnabled = localStorage.getItem('fullPTZCheckboxState') === 'false';
     const mainContent = document.getElementById('mainContent');
     mainContent.innerHTML = `
         <div id="cameraDetails">
@@ -399,7 +440,7 @@ function showCameraDetails(cameraName) {
                 <span class="camera-name">Camera Name: ${cameraName}</span>
             </div>
             <button class="btn-add-preset" onclick="addNewPreset('${cameraName}')">Add Preset</button>
-            <button class="btn-add-custom-preset" onclick="showCustomPresetInputs('${cameraName}')">Add Custom Preset</button>
+            ${isFullPTZEnabled ? '' : `<button class="btn-add-custom-preset" onclick="showCustomPresetInputs('${cameraName}')">Add Custom Preset</button>`}
             <button class="btn-sync-preset" onclick="syncPresets('${cameraName}')">Sync Presets</button>
             <table id="presetTable">
                 <thead>
@@ -420,6 +461,7 @@ function showCameraDetails(cameraName) {
                     <tr>
                         <th>#</th> 
                         <th>Preset Name</th>
+                        <th>Hotkey</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -430,7 +472,9 @@ function showCameraDetails(cameraName) {
         </div>
     `;
     fetchAndPopulatePresets(cameraName); // Call to fetch and populate regular presets
-    fetchAndPopulateCustomPresets(cameraName); // Call to fetch and populate custom presets
+    if (!isFullPTZEnabled) {
+        fetchAndPopulateCustomPresets(cameraName); // Call to fetch and populate custom presets (only if checkbox is checked)
+    }
 }
 
 
@@ -636,7 +680,7 @@ function fetchAndPopulateCustomPresets(cameraName) {
         .then(data => {
             const customPresetList = document.getElementById('customPresetList');
             customPresetList.innerHTML = ''; // Clear the custom preset list before populating
-            
+
             data.presets.filter(preset => preset.cameraName === cameraName).forEach((preset, index) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -700,14 +744,14 @@ function fetchAndPopulateCustomPresets(cameraName) {
                         }
                     })
                     .catch(error => console.error('Error fetching hotkey:', error));
-            }); 
-            
+            });
+
             // Add event listener to edit button
             document.querySelectorAll('.btn-edit').forEach(button => {
                 button.addEventListener('click', () => {
                     const presetName = button.parentElement.parentElement.querySelector('.preset-name').textContent;
                     // Handle edit functionality here
-                }); 
+                });
             });
 
             // Show or hide the custom presets table based on whether the list is empty
@@ -716,7 +760,7 @@ function fetchAndPopulateCustomPresets(cameraName) {
                 customPresetTable.style.display = 'block';
             } else {
                 customPresetTable.style.display = 'none';
-            }      
+            }
         })
         .catch(error => console.error('Error fetching custom presets:', error));
 }
@@ -768,17 +812,17 @@ function syncPresets(cameraName) {
         },
         body: JSON.stringify({ command })
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to send command');
-        }
-        console.log('Command sent successfully');
-        // After successfully sending the command, listen for Twitch chat messages
-        fetchSyncPresets(cameraName);
-    })
-    .catch(error => {
-        console.error('Error sending command:', error);
-    });
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to send command');
+            }
+            console.log('Command sent successfully');
+            // After successfully sending the command, listen for Twitch chat messages
+            fetchSyncPresets(cameraName);
+        })
+        .catch(error => {
+            console.error('Error sending command:', error);
+        });
 }
 
 function fetchSyncPresets(cameraName) {
@@ -795,33 +839,33 @@ function fetchSyncPresets(cameraName) {
         },
         body: JSON.stringify(requestBody)
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to fetch presets');
-        }
-        return response.json();
-    })
-.then(data => {
-    // Check if the presets array is not empty
-    if (data.presets && data.presets.length > 0) {
-        // Handle the received presets
-        const presets = data.presets;
-        console.log('Received presets:', presets);
-        closeDialog();
-        // Display new presets on the UI
-        displaySyncPresets(cameraName, presets);
-    } else {
-        // Handle the case where no presets are received
-        console.log('No presets received.');
-        closeDialog();
-	alert('No presets found');
-        // You can add code here to display a message to the user or handle the situation accordingly
-    }
-})
-    .catch(error => {
-        console.error('Error fetching presets:', error);
-        // Handle the error, display a message to the user, etc.
-    });
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch presets');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Check if the presets array is not empty
+            if (data.presets && data.presets.length > 0) {
+                // Handle the received presets
+                const presets = data.presets;
+                console.log('Received presets:', presets);
+                closeDialog();
+                // Display new presets on the UI
+                displaySyncPresets(cameraName, presets);
+            } else {
+                // Handle the case where no presets are received
+                console.log('No presets received.');
+                closeDialog();
+                alert('No presets found');
+                // You can add code here to display a message to the user or handle the situation accordingly
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching presets:', error);
+            // Handle the error, display a message to the user, etc.
+        });
 }
 
 
@@ -841,45 +885,45 @@ function fetchGetInfo(cameraName) {
         },
         body: JSON.stringify(requestBody)
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to fetch presets');
-        }
-        return response.json(); // Parse response as JSON
-    })
-    .then(data => {
-        if (data.presets && data.presets.length > 0) {
-            // Process presets
-            const presets = data.presets;
-            console.log('Received presets:', presets);
-            // Update UI elements with preset values
-            document.getElementById('pan').value = presets[0];
-            document.getElementById('tilt').value = presets[1];
-            document.getElementById('zoom').value = presets[2];
-            // Update autoFocus dropdown
-            const autoFocusDropdown = document.getElementById('autoFocus');
-            autoFocusDropdown.value = presets[3] === 'on' ? 'yes' : 'no';
-            // Update autofocus option based on fetched value
-            for (let i = 0; i < autoFocusDropdown.options.length; i++) {
-                if (autoFocusDropdown.options[i].value === presets[3]) {
-                    autoFocusDropdown.selectedIndex = i;
-                    break;
-                }
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch presets');
             }
-            document.getElementById('focus').value = presets[4];
-            closeDialog(); // Close dialog upon success
-        } else {
-            console.log('No presets received.');
+            return response.json(); // Parse response as JSON
+        })
+        .then(data => {
+            if (data.presets && data.presets.length > 0) {
+                // Process presets
+                const presets = data.presets;
+                console.log('Received presets:', presets);
+                // Update UI elements with preset values
+                document.getElementById('pan').value = presets[0];
+                document.getElementById('tilt').value = presets[1];
+                document.getElementById('zoom').value = presets[2];
+                // Update autoFocus dropdown
+                const autoFocusDropdown = document.getElementById('autoFocus');
+                autoFocusDropdown.value = presets[3] === 'on' ? 'yes' : 'no';
+                // Update autofocus option based on fetched value
+                for (let i = 0; i < autoFocusDropdown.options.length; i++) {
+                    if (autoFocusDropdown.options[i].value === presets[3]) {
+                        autoFocusDropdown.selectedIndex = i;
+                        break;
+                    }
+                }
+                document.getElementById('focus').value = presets[4];
+                closeDialog(); // Close dialog upon success
+            } else {
+                console.log('No presets received.');
+                closeDialog();
+                alert('No presets found');
+                // Handle no presets case
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching presets:', error);
+            // Handle error case
             closeDialog();
-            alert('No presets found');
-            // Handle no presets case
-        }
-    })
-    .catch(error => {
-        console.error('Error fetching presets:', error);
-        // Handle error case
-        closeDialog();
-    });
+        });
 }
 
 
@@ -896,17 +940,17 @@ function syncGetInfo(cameraName) {
         },
         body: JSON.stringify({ command })
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to send command');
-        }
-        console.log('Command sent successfully');
-        // After successfully sending the command, listen for Twitch chat messages
-        fetchGetInfo(cameraName);
-    })
-    .catch(error => {
-        console.error('Error sending command:', error);
-    });
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to send command');
+            }
+            console.log('Command sent successfully');
+            // After successfully sending the command, listen for Twitch chat messages
+            fetchGetInfo(cameraName);
+        })
+        .catch(error => {
+            console.error('Error sending command:', error);
+        });
 }
 
 
@@ -980,7 +1024,7 @@ function displaySyncPresets(cameraName, fetchedPresets) {
             // Add "Add new presets" button
             const addPresetsButton = document.createElement('button');
             addPresetsButton.textContent = 'Add new presets';
-	        addPresetsButton.classList.add('btn-add-presets'); // Add the class to the button
+            addPresetsButton.classList.add('btn-add-presets'); // Add the class to the button
             addPresetsButton.addEventListener('click', () => {
                 // Get all selected presets
                 const selectedPresets = Array.from(document.querySelectorAll('#newPresetTable input[type="checkbox"]:checked'))
@@ -997,21 +1041,21 @@ function displaySyncPresets(cameraName, fetchedPresets) {
                         newPresets: selectedPresets
                     })
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to add new presets');
-                    }
-                    return response.text();
-                })
-                .then(data => {
-                    console.log('New presets added successfully:', data);
-                    // You can perform additional actions here, such as updating the UI
-                   window.location.reload();
-                })
-                .catch(error => {
-                    console.error('Error adding new presets:', error);
-                    // Handle the error, e.g., display an error message to the user
-                });
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to add new presets');
+                        }
+                        return response.text();
+                    })
+                    .then(data => {
+                        console.log('New presets added successfully:', data);
+                        // You can perform additional actions here, such as updating the UI
+                        window.location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error adding new presets:', error);
+                        // Handle the error, e.g., display an error message to the user
+                    });
             });
 
             mainContent.appendChild(addPresetsButton);
@@ -1041,10 +1085,10 @@ function compareSyncPresets(existingPresets, newPresets) {
 let isNewPreset = true; // Initially set isNewPreset to true for creating a new preset
 
 function editCustomPreset(cameraName, presetName) {
-            showCustomPresetInputs(cameraName);
-            populateCustomPresetInputs(presetName);
-            isNewPreset = false; // Set isNewPreset flag to false for editing existing preset
-            originalPresetName = presetName; // Store the original preset name
+    showCustomPresetInputs(cameraName);
+    populateCustomPresetInputs(presetName);
+    isNewPreset = false; // Set isNewPreset flag to false for editing existing preset
+    originalPresetName = presetName; // Store the original preset name
 }
 
 
@@ -1121,28 +1165,26 @@ function saveCustomPreset(cameraName) {
         },
         body: JSON.stringify(payload)
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to save custom preset');
-        }
-        console.log('Custom preset saved successfully');
-        // Optionally, perform additional actions after successful save
-        fetchAndPopulatePresets(cameraName); // Re-populate presets
-        // Reset input fields
-        document.getElementById('presetName').value = '';
-        document.getElementById('pan').value = '';
-        document.getElementById('tilt').value = '';
-        document.getElementById('zoom').value = '';
-        document.getElementById('focus').value = '';
-        showCameraDetails(cameraName); // Show camera details again, which includes preset pad
-    })
-    .catch(error => {
-        console.error('Error saving custom preset:', error);
-        // Optionally, handle error or provide feedback to the user
-    });
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to save custom preset');
+            }
+            console.log('Custom preset saved successfully');
+            // Optionally, perform additional actions after successful save
+            fetchAndPopulatePresets(cameraName); // Re-populate presets
+            // Reset input fields
+            document.getElementById('presetName').value = '';
+            document.getElementById('pan').value = '';
+            document.getElementById('tilt').value = '';
+            document.getElementById('zoom').value = '';
+            document.getElementById('focus').value = '';
+            showCameraDetails(cameraName); // Show camera details again, which includes preset pad
+        })
+        .catch(error => {
+            console.error('Error saving custom preset:', error);
+            // Optionally, handle error or provide feedback to the user
+        });
 }
-
-
 
 function deleteCustomPreset(cameraName, presetName) {
     // Display a confirmation dialog
@@ -1155,19 +1197,19 @@ function deleteCustomPreset(cameraName, presetName) {
             },
             body: JSON.stringify({ cameraName: cameraName, presetName: presetName })
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to delete custom preset');
-            }
-            console.log('Custom preset deleted successfully');
-            // Optionally, perform additional actions after successful deletion
-            showCameraDetails(cameraName); // Show camera details again, which includes preset pad
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to delete custom preset');
+                }
+                console.log('Custom preset deleted successfully');
+                // Optionally, perform additional actions after successful deletion
+                showCameraDetails(cameraName); // Show camera details again, which includes preset pad
 
-        })
-        .catch(error => {
-            console.error('Error deleting custom preset:', error);
-            // Optionally, handle error or provide feedback to the user
-        });
+            })
+            .catch(error => {
+                console.error('Error deleting custom preset:', error);
+                // Optionally, handle error or provide feedback to the user
+            });
     }
 }
 
@@ -1191,19 +1233,19 @@ function updateCustomPresetOrder(cameraName) {
         },
         body: JSON.stringify({ presetNames: updatedCustomPresets }), // Ensure presetNames matches the server-side expectation
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to update custom preset order');
-        }
-        console.log('Custom preset order updated successfully');
-        // Additional logic if needed
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to update custom preset order');
+            }
+            console.log('Custom preset order updated successfully');
+            // Additional logic if needed
 
-        sessionStorage.setItem('currentCameraName', cameraName);
-        reloadCameraDetails(); // Reload the camera details view after successful update
-    })
-    .catch(error => {
-        console.error('Error updating custom preset order:', error);
-    });
+            sessionStorage.setItem('currentCameraName', cameraName);
+            reloadCameraDetails(); // Reload the camera details view after successful update
+        })
+        .catch(error => {
+            console.error('Error updating custom preset order:', error);
+        });
 }
 
 function moveCustomPresetTo(cameraName, presetId) {
@@ -1261,16 +1303,16 @@ function addNewPreset(cameraName) {
         },
         body: JSON.stringify({ cameraName, newPresetName }),
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to add preset');
-        }
-        console.log('Preset added successfully');
-        showCameraDetails(cameraName); // Refresh preset list for the current camera
-    })
-    .catch(error => {
-        console.error('Error adding preset:', error);
-    });
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to add preset');
+            }
+            console.log('Preset added successfully');
+            showCameraDetails(cameraName); // Refresh preset list for the current camera
+        })
+        .catch(error => {
+            console.error('Error adding preset:', error);
+        });
 }
 
 function addCamera() {
@@ -1278,23 +1320,23 @@ function addCamera() {
     if (cameraName === null || cameraName.trim() === '') return;
 
     fetch('/add-camera', {
-        method: 'POST', 
-        headers: {      
+        method: 'POST',
+        headers: {
             'Content-Type': 'application/json',
-        },      
+        },
         body: JSON.stringify({ cameraName }),
-    })              
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to add camera');
-        }
-        console.log('Camera added successfully');
-        document.getElementById('manageCamerasLink').click();
-    })  
-    .catch(error => { 
-        console.error('Error adding camera:', error);
-    });     
-}           
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to add camera');
+            }
+            console.log('Camera added successfully');
+            document.getElementById('manageCamerasLink').click();
+        })
+        .catch(error => {
+            console.error('Error adding camera:', error);
+        });
+}
 
 
 function editPreset(cameraName, presetId) {
@@ -1311,16 +1353,16 @@ function editPreset(cameraName, presetId) {
         },
         body: JSON.stringify({ cameraName, presetId, newPresetName }),
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to rename preset');
-        }
-        console.log('Preset renamed successfully');
-        showCameraDetails(cameraName); // Reload preset list for the current camera
-    })
-    .catch(error => {
-        console.error('Error renaming preset:', error);
-    });
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to rename preset');
+            }
+            console.log('Preset renamed successfully');
+            showCameraDetails(cameraName); // Reload preset list for the current camera
+        })
+        .catch(error => {
+            console.error('Error renaming preset:', error);
+        });
 }
 
 
@@ -1360,18 +1402,18 @@ function updatePresetOrder(cameraName) {
         },
         body: JSON.stringify({ cameraName, presets: updatedPresets }),
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to update preset order');
-        }
-        console.log('Preset order updated successfully');
-        // Save the currently selected camera name in session storage
-        sessionStorage.setItem('currentCameraName', cameraName);
-        reloadCameraDetails(); // Reload the camera details view after successful update
-    })
-    .catch(error => {
-        console.error('Error updating preset order:', error);
-    });
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to update preset order');
+            }
+            console.log('Preset order updated successfully');
+            // Save the currently selected camera name in session storage
+            sessionStorage.setItem('currentCameraName', cameraName);
+            reloadCameraDetails(); // Reload the camera details view after successful update
+        })
+        .catch(error => {
+            console.error('Error updating preset order:', error);
+        });
 }
 
 
@@ -1396,16 +1438,16 @@ function deletePreset(cameraName, presetId) {
             },
             body: JSON.stringify({ cameraName, presetId }),
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to delete preset');
-            }
-            console.log('Preset deleted successfully');
-            showCameraDetails(cameraName); // Reload preset list for the current camera
-        })
-        .catch(error => {
-            console.error('Error deleting preset:', error);
-        });
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to delete preset');
+                }
+                console.log('Preset deleted successfully');
+                showCameraDetails(cameraName); // Reload preset list for the current camera
+            })
+            .catch(error => {
+                console.error('Error deleting preset:', error);
+            });
     }
 }
 
@@ -1417,18 +1459,18 @@ function moveCameraUp(cameraName) {
         },
         body: JSON.stringify({ cameraName }),
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to move camera up');
-        }
-        console.log('Camera moved up successfully');
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to move camera up');
+            }
+            console.log('Camera moved up successfully');
 
-        // Simulate a click on the "Manage Cameras" button to reload the page
-        document.getElementById('manageCamerasLink').click();
-    })
-    .catch(error => {
-        console.error('Error moving camera up:', error);
-    });
+            // Simulate a click on the "Manage Cameras" button to reload the page
+            document.getElementById('manageCamerasLink').click();
+        })
+        .catch(error => {
+            console.error('Error moving camera up:', error);
+        });
 }
 
 function moveCameraTo(cameraName) {
@@ -1455,18 +1497,18 @@ function moveCameraTo(cameraName) {
         },
         body: JSON.stringify({ cameraName, lineNumber }),
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to move camera to line number');
-        }
-        console.log('Camera moved to line number successfully');
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to move camera to line number');
+            }
+            console.log('Camera moved to line number successfully');
 
-        // Simulate a click on the "Manage Cameras" button to reload the page
-        document.getElementById('manageCamerasLink').click();
-    })
-    .catch(error => {
-        console.error('Error moving camera to line number:', error);
-    });
+            // Simulate a click on the "Manage Cameras" button to reload the page
+            document.getElementById('manageCamerasLink').click();
+        })
+        .catch(error => {
+            console.error('Error moving camera to line number:', error);
+        });
 }
 
 let dialog = null;
@@ -1504,4 +1546,3 @@ function closeDialog() {
         dialog = null; // Reset dialog reference
     }
 }
-
