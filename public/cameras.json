@@ -526,6 +526,18 @@
     {
       "name": "wolfden2",
       "presets": []
+    },
+    {
+      "name": "wolfindoor",
+      "presets": []
+    },
+    {
+      "name": "wolfmulti",
+      "presets": []
+    },
+    {
+      "name": "wolfmulti2",
+      "presets": []
     }
   ]
 }
