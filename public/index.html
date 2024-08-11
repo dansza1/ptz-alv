@@ -100,8 +100,8 @@
                                 <button class="arrow-button"></button>
                                 <button class="ptz-arrow-button" onclick="decrementZoom()"
                                     onmousedown="animateButton(this)">◀</button>
-                                <button class="ptz-arrow-button" id="sliderZoomLabel">0</button>
-                                <button class="ptz-arrow-button" onclick="incrementZoom()"
+                                    <button class="ptz-arrow-button" id="sliderZoomLabel" style="font-size: 17px;">10%</button>
+                                    <button class="ptz-arrow-button" onclick="incrementZoom()"
                                     onmousedown="animateButton(this)">▶</button>
                                 <button class="arrow-button"></button>
                                 <button class="ptz-arrow-button" onclick="sendpadZoom('minus')"
@@ -221,15 +221,16 @@
                         <div class="other-wrapper">
                             <button class="volume-button" onclick="sendVolumeControl()"></button>
                             <button class="reset-button" onclick="sendReset()"></button>
-                            <button class="mpv-button" onclick="startListening(this)" style="display: none;"></button>
+                            <button class="mpv-button" onclick="enableSpin(this)" style="display: none;"></button>
 
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
         <div id="video-placeholder"></div>
+
+        <div class="right-side">
 
         <!-- Preset Container -->
         <div class="preset-container grid-layout">
@@ -238,7 +239,7 @@
                 <div class="preset-header">
                     <div class="vidbuttondiv" style="display: none;">
                         <button class="vidbuttons" onclick="toggleVideo('video')">Video</button>
-                        <button class="vidbuttons" onclick="toggleVideo('presets')">Presets</button>
+                        <button class="vidbuttons" id="openDialogButton">Presets</button>
                     </div>
                     <h2 class="label-preset-heading" style="cursor: pointer;"
                         onclick="toggleDirectionPad('.preset-pad')">- Presets -</h2>
@@ -257,6 +258,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 

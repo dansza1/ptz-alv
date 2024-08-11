@@ -25,7 +25,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Twitch bot configuration
 const client = new tmi.Client({
     options: {
-        debug: true, // Enable debug logging
+        debug: false, // Enable debug logging
     },
     connection: {
         secure: true,
@@ -61,12 +61,13 @@ app.get('/twitch-settings', (req, res) => {
 
 // Endpoint to save Twitch settings
 app.post('/save-twitch-settings', (req, res) => {
-    const { username, channel, oauthKey } = req.body;
+    const { username, channel, oauthKey, url } = req.body;
 
     // Update only the fields that were edited
     if (username) config.twitch.username = username;
     if (channel) config.twitch.channel = channel;
     if (oauthKey) config.twitch.oauthKey = oauthKey;
+    if (url) config.twitch.url = url;
 
     // Write updated configuration back to config.json
     fs.writeFile('./config.json', JSON.stringify(config, null, 4), (err) => {
@@ -686,7 +687,7 @@ app.get('/get-preset-by-name', (req, res) => {
     });
 });
 
-let lastCommand = ""; // Variable to store the last command
+//let lastCommand = ""; // Variable to store the last command
 
 app.post('/send-command', (req, res) => {
     const command = req.body.command;
@@ -695,16 +696,64 @@ app.post('/send-command', (req, res) => {
 });     
 
 // Function to send message to Twitch chat
-function sendMessage(message) {
+//function sendMessage(message) {
     // Check if the command contains !ptzmove and matches the last command
-    if ((message.includes('!ptzmove') || message.includes('!ptzzoom') || message.includes('!ptzfocusr') || message.includes('!ptzset') || message.includes('!swap')) && message === lastCommand) {
-    message += " ."; // Add " ." to the end of the message
-    }
-    client.say(config.twitch.channel, message);
+//    if ((message.includes('!ptzmove') || message.includes('!ptzclick') || message.includes('!ptzareazoom') || message.includes('!ptzzoom') || message.includes('!ptzfocusr') || message.includes('!ptzset') || message.includes('!swap')) && message === lastCommand) {
+//    message += " ."; // Add " ." to the end of the message
+//    }
+//   client.say(config.twitch.channel, message);
     
     // Save the last command after the "." check
-    lastCommand = message;
-}       
+//    lastCommand = message;
+//}       
+
+
+let lastMessageTime = 0;
+let messageQueue = [];
+let isProcessing = false;
+let lastCommand = '';
+
+function sendMessage(message) {
+    // Save the message to the queue
+    messageQueue.push(message);
+
+    // Process the queue if not already processing
+    if (!isProcessing) {
+        processQueue();
+    }
+}
+
+function processQueue() {
+    isProcessing = true;
+
+    // Check if there are messages in the queue
+    if (messageQueue.length > 0) {
+        const now = Date.now();
+        const timeSinceLastMessage = now - lastMessageTime;
+        const delay = timeSinceLastMessage < 1000 ? 1000 : 0;
+
+        if (delay > 0) {
+            console.log(`Adding delay of 1000ms before sending next message.`);
+        }
+
+        // Wait for the delay before sending the next message
+        setTimeout(() => {
+            let message = messageQueue.shift();
+
+            // Check if the command contains !ptzmove and matches the last command
+            if ((message.includes('!ptzmove') || message.includes('!ptzclick') || message.includes('!ptzspin') || message.includes('!ptzareazoom') || message.includes('!ptzzoom') || message.includes('!ptzfocusr') || message.includes('!ptzset') || message.includes('!swap')) && message === lastCommand) {
+                message += " ."; // Add " ." to the end of the message
+            }
+
+            client.say(config.twitch.channel, message);
+            lastMessageTime = Date.now();
+            lastCommand = message; // Update lastCommand after sending the message
+            processQueue(); // Process the next message in the queue
+        }, delay);
+    } else {
+        isProcessing = false;
+    }
+}
 
 // Endpoint to receive the command from the frontend
 app.post('/fetch-presets', (req, res) => {
@@ -776,6 +825,7 @@ function listenForMessages(cameraName) {
         throw error;
     });
 }
+
 
 function listenForGetInfo(cameraName) {
     return new Promise((resolve, reject) => {
@@ -1072,43 +1122,6 @@ app.post('/ptz-command', (req, res) => {
       res.status(500).json({ error: "Internal Server Error" });
     }
   });
-
-// Create a TCP server
-const server = net.createServer((socket) => {
-  console.log('Client connected');
-
-  socket.on('data', (data) => {
-    try {
-      const parsedData = JSON.parse(data.toString());
-      console.log('Parsed data:', parsedData);
-
-      // Broadcast the parsed data to all connected WebSocket clients
-      wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify(parsedData));
-        }
-      });
-    } catch (error) {
-      console.error('Error parsing data:', error);
-    }
-  });
-
-  socket.on('end', () => {
-    console.log('Client disconnected');
-  });
-});
-
-server.listen(8080, () => {
-  console.log('TCP server is listening on port 8080');
-});
-
-// WebSocket server setup
-const wss = new WebSocket.Server({ port: 8081 });
-wss.on('connection', (ws) => {
-  console.log('WebSocket client connected');
-});
-
-console.log('WebSocket server is listening on port 8081');
 
 
 // Server listening on port 3000

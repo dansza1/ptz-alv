@@ -1,10 +1,20 @@
+/* Global styles to hide scrollbars for Webkit browsers (Chrome, Safari, newer Edge) */
+::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari, and newer Edge */
+}
+
+* {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* Internet Explorer and Edge */
+}
+
+
 body {
     font-family: Arial, sans-serif;
     background-color: #404040; /* Dark background color */
     color: #ffffff; /* White text color */
     margin: 0;
     padding: 0;
-
 }
  
 .logo {
@@ -43,6 +53,7 @@ body {
     height: 60px;
     display: flex;
     box-shadow: 5px 0px 10px rgba(0, 0, 0, 0.3); /* Add shadow on the right side */
+    zoom: 80%;
 }
 
 .heading-container::before {
@@ -166,6 +177,7 @@ body {
     min-width: 275px;
     margin-top: -50px;
     overflow: hidden; /* Ensure no overflow behavior on the parent container */
+    zoom: 80%;
 }
 }
 @media (min-width: 600px) {
@@ -174,6 +186,8 @@ body {
         min-width: 314px;
         margin-top: -50px;
         overflow: hidden; /* Ensure no overflow behavior on the parent container */
+        zoom: 80%;
+
     }
     }
 
@@ -351,7 +365,7 @@ body {
 
 .container {
     display: flex;
-    margin-top: 10px;
+    margin-top: 2px;
     margin-bottom: 30px;
 }
 
@@ -1454,6 +1468,8 @@ body {
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     min-width: 400px;
+    z-index: 1000; /* Make sure it appears on top */
+
 }
 
 .volume-container {
@@ -1639,6 +1655,7 @@ body {
     padding: 0 10px;                  /* Optional padding for spacing */
     margin-bottom: -35px;
     margin-top: 10px;
+    zoom: 90%;
 }
 
 /* Style for button group on the left */
@@ -1692,11 +1709,16 @@ body {
     margin-left: auto;  /* Push this button to the far right */
     margin-right: 10px; /* Adjust this value to move button3 closer to the center */
 }
+.vidbutton4 {
+    margin-right: 15px; /* Adjust this value to move button3 closer to the center */
 
-.vidbutton3.highlighted {
+}
+
+.vidbutton3.highlighted, .vidbutton4.highlighted {
     background-color: #1565c0; /* Highlight color for button3 */
 }
-.vidbutton:hover, .vidbutton2:hover, .vidbutton3:hover {
+
+.vidbutton:hover, .vidbutton2:hover, .vidbutton3:hover, .vidbutton4:hover {
     background-color: #1e88e5;
 }
   .camera-button {
@@ -1734,4 +1756,89 @@ body {
     display: block;
     margin-top: 40px;
     margin-left: -5px;
+}
+/* Basic styling for the dialog */
+.dialog {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top of everything else */
+    left: 0;
+    top: 0;
+    width: 100px; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+}
+
+/* Dialog Content */
+.dialog-content {
+    background-color: #fefefe;
+    margin: 10% auto; /* Center the dialog */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+    max-width: 800px; /* Maximum width of the dialog */
+    position: relative; /* Position relative to allow positioning of the close button */
+}
+
+/* Close Button */
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Preset Pad */
+.preset-pad {
+    /* Ensure this has the same styles as your main presetPad */
+    /* Add any additional styling needed */
+}
+
+.preset-button-container {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.preset-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    margin-right: 10px;
+}
+
+.preset-button {
+    padding: 10px;
+}
+
+.preset-button-hover {
+    background-color: #ddd; /* Highlight color */
+}
+.no-scroll {
+    overflow: hidden;
+}
+
+
+/* Hide scrollbars for Webkit browsers (Chrome, Safari, newer Edge) */
+html, body {
+    overflow: -moz-scrollbars-none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer and older Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+    width: 0 !important; /* Webkit browsers */
+    height: 0 !important;
+}
+
+.left-menu {
+    zoom: 80%;
 }

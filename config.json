@@ -2,6 +2,7 @@
     "twitch": {
         "username": "username",
         "channel": "alveusgg",
-        "oauthKey": ""
+        "oauthKey": "oauth:",
+        "url": "https://player.twitch.tv/?channel=alveussanctuary&parent=localhost"
     }
 }

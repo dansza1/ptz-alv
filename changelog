@@ -1,3 +1,9 @@
+v1.6
+- Added auto cam detection for click and area click
+- Added swap hotkeys
+- Added setting to change stream URL
+- bug fixes
+
 v1.5
 - Added search for presets
 - Added config setting to disable Full PTZ permission features

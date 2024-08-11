@@ -21,12 +21,16 @@ function fetchTwitchSettings() {
             const twitchUsernameElement = document.getElementById('twitchUsername');
             const twitchChannelElement = document.getElementById('twitchChannel');
             const twitchOAuthKeyElement = document.getElementById('twitchOAuthKey');
+            const twitchURLElement = document.getElementById('twitchURL');
 
-            if (twitchUsernameElement && twitchChannelElement && twitchOAuthKeyElement) {
+
+            if (twitchUsernameElement && twitchChannelElement && twitchOAuthKeyElement && twitchURLElement) {
                 // Populate the paragraph elements with the fetched settings
                 twitchUsernameElement.textContent = data.twitch.username || 'Not Available';
                 twitchChannelElement.textContent = data.twitch.channel || 'Not Available';
                 twitchOAuthKeyElement.textContent = data.twitch.oauthKey || 'Not Available';
+                twitchURLElement.textContent = data.twitch.url || 'Not Available';
+
             } else {
                 console.error('One or more Twitch settings elements not found.');
             }
@@ -40,14 +44,14 @@ function editField(fieldId) {
     const currentValue = fieldValue.innerText.trim();
 
     // Show a prompt dialog for editing the field
-    const newValue = prompt(`Enter new value for ${fieldId}:`, currentValue);
+    let newValue = prompt(`Enter new value for ${fieldId}:`, currentValue);
 
-    // If user clicked cancel or entered an empty value, do nothing
-    if (newValue === null || newValue.trim() === '') {
-        return;
+    // Handle empty value for specific field
+    if (fieldId === 'twitchURL' && (newValue === '' || newValue === null)) {
+        newValue = 'https://player.twitch.tv/?channel=alveussanctuary&parent=localhost'; // Default value
     }
 
-    // Update the field value
+    // Ensure the fieldValue is updated with the correct newValue
     fieldValue.innerText = newValue;
 
     // Save the new value to the server
@@ -59,6 +63,8 @@ function saveTwitchSettings() {
     const twitchUsername = document.getElementById('twitchUsername').innerText;
     const twitchChannel = document.getElementById('twitchChannel').innerText;
     const twitchOAuthKey = document.getElementById('twitchOAuthKey').innerText;
+    const twitchURL = document.getElementById('twitchURL').innerText;
+
 
     // Make an API call to save the updated Twitch settings
     fetch('/save-twitch-settings', {
@@ -69,7 +75,8 @@ function saveTwitchSettings() {
         body: JSON.stringify({
             username: twitchUsername,
             channel: twitchChannel,
-            oauthKey: twitchOAuthKey
+            oauthKey: twitchOAuthKey,
+            url: twitchURL
         })
     })
         .then(response => {
@@ -118,6 +125,11 @@ function showTwitchSettings() {
                 <td><p id="twitchOAuthKey" class="field-value"></p></td>
                 <td><button class="edit-button" onclick="editField('twitchOAuthKey')">Edit</button></td>
             </tr>
+             <tr>
+                <td><label class="field-label">Stream URL</label></td>
+                <td><p id="twitchURL" class="field-value"></p></td>
+                <td><button class="edit-button" onclick="editField('twitchURL')">Edit</button></td>
+            </tr>
         </table>
     `;
 
@@ -156,13 +168,25 @@ function showInterfaceSettings() {
                 </td>
             </tr>
              <tr>
+                <td><label class="field-label">Show camera Thumbnails</label></td>
+                <td>
+                <input type="checkbox" class="edit-checkbox" id="CamerathumbnailCheckbox" checked>
+                </td>
+            </tr>
+             <tr>
                 <td><label class="field-label">Enable Hotkeys</label></td>
                 <td>
                 <input type="checkbox" class="edit-checkbox" id="arrowKeyCheckbox" checked>
                 </td>
             </tr>
              <tr>
-                <td><label class="field-label">Enable MPV Click</label></td>
+                <td><label class="field-label">Enable Swap hotkeys</label></td>
+                <td>
+                <input type="checkbox" class="edit-checkbox" id="swapHotkeyCheckbox" checked>
+                </td>
+            </tr>            
+             <tr>
+                <td><label class="field-label">Enable Continuous Move</label></td>
                 <td>
                 <input type="checkbox" class="edit-checkbox" id="MPVCheckbox" checked>
                 </td>
@@ -213,7 +237,9 @@ document.getElementById('interfaceSettingsLink').addEventListener('click', funct
 
     // Set up the checkboxes
     setupCheckbox('thumbnailCheckbox', 'thumbnailVisibility');
+    setupCheckbox('CamerathumbnailCheckbox', 'CamerathumbnailVisibility');
     setupCheckbox('arrowKeyCheckbox', 'arrowKeyCheckboxState');
+    setupCheckbox('swapHotkeyCheckbox', 'swapHotkeyCheckboxState');
     setupCheckbox('FullPTZCheckbox', 'fullPTZCheckboxState', (isChecked) => {
         // Call the function to toggle direction container defined in script.js
         if (typeof toggleDirectionContainer === 'function') {
@@ -797,12 +823,10 @@ function populateCustomPresetInputs(presetName) {
 }
 
 
-
 function syncPresets(cameraName) {
     showDialog('Fetching presets from Twitch');
     // Construct the command to be sent
     const command = `!ptzlist ${cameraName.toLowerCase()}`;
-
 
     // Send the command to the backend endpoint
     fetch('/send-command', {
@@ -953,8 +977,6 @@ function syncGetInfo(cameraName) {
         });
 }
 
-
-
 function displaySyncPresets(cameraName, fetchedPresets) {
     // Fetch presets from the server
     fetch('/cameras')
@@ -1017,9 +1039,15 @@ function displaySyncPresets(cameraName, fetchedPresets) {
             // Populate the new table with the new presets
             newPresets.forEach((preset, index) => {
                 const newIndex = index + 1; // Start numbering from 1 for the new presets
-                const row = createSyncPresetRow(newIndex, preset, cameraName);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${newIndex}</td>
+                    <td>${preset}</td>
+                    <td><input type="checkbox" value="${preset}" data-camera="${cameraName}"></td>
+                `;
                 newPresetList.appendChild(row);
             });
+
 
             // Add "Add new presets" button
             const addPresetsButton = document.createElement('button');
@@ -1059,6 +1087,20 @@ function displaySyncPresets(cameraName, fetchedPresets) {
             });
 
             mainContent.appendChild(addPresetsButton);
+
+                        // Add "Select All" button
+                        const selectAllButton = document.createElement('button');
+                        selectAllButton.textContent = 'Select All';
+                        selectAllButton.classList.add('btn-select-all'); // Add the class to the button
+                        selectAllButton.addEventListener('click', () => {
+                            // Check all checkboxes
+                            const checkboxes = document.querySelectorAll('#newPresetTable input[type="checkbox"]');
+                            checkboxes.forEach(checkbox => {
+                                checkbox.checked = true;
+                            });
+                        });
+            
+                        mainContent.appendChild(selectAllButton);
         })
         .catch(error => {
             console.error('Error fetching presets:', error);

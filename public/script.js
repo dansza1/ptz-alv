@@ -1,6 +1,8 @@
 
 let selectedCamera = ''; // Initialize selected camera as empty string
 let camerasData = null; // Initialize variable to store camera data
+const storedTwitchURL = localStorage.getItem('twitchURL');
+twitchURL = storedTwitchURL;
 
 window.onload = function () {
     loadcheck();
@@ -12,11 +14,11 @@ function loadcheck() {
     const savedViewMode = localStorage.getItem('viewMode');
     const prePad = document.querySelector('.preset-container');
 
-     if (savedViewMode === 'vid') {
+    if (savedViewMode === 'vid') {
         prePad.style.display = 'none';
-        } else {
+    } else {
         toggleDirectionPad('.preset-container');
-        }
+    }
     const savedCheckboxState = localStorage.getItem('fullPTZCheckboxState');
     const isFullPTZEnabled = savedCheckboxState === 'true';
     toggleDirectionContainer(isFullPTZEnabled);
@@ -29,21 +31,30 @@ function loadcheck() {
 // Load and set collapsed state of boxes on page load
 window.addEventListener('load', () => {
     for (const [key, value] of Object.entries(localStorage)) {
-      if (key.startsWith('boxState-')) {
-        const selector = key.slice(9); // Extract selector from key (including the dot)
-        const box = document.querySelector(selector);
-        if (box) {
-          const isCollapsed = value === 'true'; // Convert string value to boolean
-          box.classList.toggle('collapsed');
+        if (key.startsWith('boxState-')) {
+            const selector = key.slice(9); // Extract selector from key (including the dot)
+            const box = document.querySelector(selector);
+            if (box) {
+                const isCollapsed = value === 'true'; // Convert string value to boolean
+                box.classList.toggle('collapsed');
+            }
         }
-      }
     }
-  });
-  
+});
+
 // Check if the thumbnailCheckbox setting exists in local storage
 if (localStorage.getItem('thumbnailVisibility') === null) {
     // If not, initialize it with a default value of true
     localStorage.setItem('thumbnailVisibility', 'true');
+}
+if (localStorage.getItem('CamerathumbnailVisibility') === null) {
+    // If not, initialize it with a default value of true
+    localStorage.setItem('CamerathumbnailVisibility', 'true');
+}
+
+if (localStorage.getItem('swapHotkeyCheckboxState') === null) {
+    // If not, initialize it with a default value of true
+    localStorage.setItem('swapHotkeyCheckboxState', 'false');
 }
 
 if (localStorage.getItem('arrowKeyCheckboxState') === null) {
@@ -68,6 +79,31 @@ const updateThumbnailVisibility = (isChecked) => {
         thumbnail.style.display = isChecked ? 'block' : 'none'; // Show/hide thumbnails based on checkbox state
     });
 };
+
+function updateCameraThumbnailVisibility(isChecked) {
+    const cameraThumbnails = document.querySelectorAll('.camera-thumbnail');
+    const cameraButtons = document.querySelectorAll('.camera-button');
+    
+    // Update visibility of thumbnails
+    cameraThumbnails.forEach(thumbnail => {
+        console.log(`Setting display for ${thumbnail.src} to ${isChecked ? 'block' : 'none'}`);
+        thumbnail.style.display = isChecked ? 'block' : 'none';
+    });
+
+    // Update width of camera buttons based on checkbox state
+    cameraButtons.forEach(button => {
+        if (isChecked) {
+            button.style.width = '140px'; // Example width when thumbnails are visible
+            button.style.height = '28px'; // Example width when thumbnails are visible
+
+        } else {
+            button.style.width = '200px'; // Example width when thumbnails are hidden
+            button.style.height = '30px'; // Example width when thumbnails are visible
+
+        }
+        console.log(`Setting width for button to ${button.style.width}`);
+    });
+}
 
 // Function to update button height based on checkbox state for grid layout
 const updateButtonHeight = (isChecked) => {
@@ -126,13 +162,13 @@ function toggleDirectionPad(selector) {
         // Store collapsed state in local storage
         if (isCollapsed) {
             localStorage.setItem(`boxState-${selector}`, true);
-    
-          } else {
+
+        } else {
             localStorage.removeItem(`boxState-${selector}`);
-          }
+        }
     } else {
         console.log('Element not found with selector:', selector);
-    }         
+    }
 }
 
 function togglePad(selector) {
@@ -205,8 +241,6 @@ function toggleDirectionContainer(isVisible) {
             customLabelPreset.style.display = isVisible ? 'block' : 'none';
         }
     }
-
-
     else {
         console.error('custompresetpadContainer or customLabelPreset element not found.');
     }
@@ -277,11 +311,239 @@ function setActiveHeading(headingClass) {
     headings.forEach(h => h.classList.add('active'));
 }
 
+async function fetchTwitchURL() {
+    fetch('/twitch-settings')
+        .then(response => {
+            if (!response.ok) {
+                console.error('Error fetching Twitch settings. Status:', response.status);
+                return response.text().then(text => console.error('Response body:', text));
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Update the global variable with the fetched URL
+            twitchURL = data.twitch.url || 'https://player.twitch.tv/?channel=alveussanctuary&parent=localhost';
+            localStorage.setItem('twitchURL', twitchURL);            
+        })
+        .catch(error => console.error('Error fetching Twitch settings:', error));
+}
+
+
 document.addEventListener('DOMContentLoaded', function () {
     const gridIcon = document.getElementById('gridIcon');
     const listIcon = document.getElementById('listIcon');
     const presetContainer = document.querySelector('.preset-container');
     const customPresetContainer = document.querySelector('.custom-preset-container');
+
+    function openPresetDialog() {
+        // Create the dialog element if it doesn't exist
+        let dialog = document.getElementById('dialog');
+        let closeButton;
+        adjustLayout();
+
+        document.body.classList.add('no-scroll'); // Disable scrolling
+        if (!dialog) {
+            dialog = document.createElement('div');
+            dialog.id = 'dialog';
+            dialog.className = 'dialog'; // Default class
+
+            const dialogContent = document.createElement('div');
+            dialogContent.className = 'dialog-content';
+
+            closeButton = document.createElement('span');
+            closeButton.id = 'closeDialogButton';
+            closeButton.className = 'close-button';
+            closeButton.innerHTML = '&times;'; // Close button (×)
+
+            // Append elements to the dialog content
+            dialogContent.appendChild(closeButton);
+
+            // Append dialog content to the dialog
+            dialog.appendChild(dialogContent);
+
+            // Append dialog to the body
+            document.body.appendChild(dialog);
+        } else {
+            closeButton = document.getElementById('closeDialogButton');
+        }
+
+        // Get the existing preset-container
+        const originalPresetContainer = document.querySelector('.preset-container');
+        if (originalPresetContainer) {
+            // Clone the preset-container
+            const clonedPresetContainer = originalPresetContainer.cloneNode(true);
+
+            // Determine layout type
+            const isGridLayout = originalPresetContainer.classList.contains('grid-layout');
+            const layoutType = isGridLayout ? 'grid-layout' : 'list-layout';
+
+
+            // Remove any existing layout classes
+            dialog.classList.remove('grid-layout', 'list-layout');
+
+            // Add the appropriate layout class
+            if (isGridLayout) {
+                dialog.classList.add('grid-layout');
+            } else {
+                dialog.classList.add('list-layout');
+            }
+            // Apply styles based on layout type
+            applyStyles(layoutType);
+            adjustLayout();
+
+            // Add layout-specific class to dialog
+            dialog.classList.add(layoutType);
+
+            // Ensure that the cloned elements are visible
+            const presetCards = clonedPresetContainer.querySelectorAll('.preset-container-card');
+            presetCards.forEach(card => {
+                card.classList.remove('hidden');
+                card.style.display = ''; // Ensure it's visible
+            });
+
+            // Ensure no unwanted styles are applied
+            clonedPresetContainer.classList.remove('collapsed'); // Remove 'collapsed' class
+            clonedPresetContainer.style.display = ''; // Ensure it's visible
+
+            // Handle layout-specific adjustments
+            if (isGridLayout) {
+                clonedPresetContainer.classList.remove('collapsed'); // Ensure it's expanded
+                const gridItems = clonedPresetContainer.querySelectorAll('.grid-item'); // Adjust selector as needed
+                gridItems.forEach(item => {
+                    item.classList.remove('hidden');
+                    item.style.display = ''; // Ensure it's visible
+                });
+            } else {
+                clonedPresetContainer.classList.remove('collapsed'); // Ensure it's expanded
+                clonedPresetContainer.querySelectorAll('.preset-pad').forEach(presetPad => {
+                    presetPad.classList.remove('collapsed');
+                    presetPad.style.display = ''; // Ensure it's visible
+                });
+            }
+
+            const clonedPresetPads = clonedPresetContainer.querySelectorAll('.preset-pad');
+            const clonedLabelHeading = clonedPresetContainer.querySelector('.label-preset-heading');
+
+            if (clonedLabelHeading) {
+                clonedLabelHeading.style.cursor = 'pointer';
+                clonedLabelHeading.addEventListener('click', () => {
+                    clonedPresetPads.forEach(presetPad => {
+                        presetPad.classList.toggle('collapsed');
+                    });
+                });
+            }
+            // Reattach event listeners to cloned buttons and images
+            reattachListeners(clonedPresetContainer);
+
+            // Clear previous content in the dialog and append the cloned container
+            const dialogContent = document.querySelector('.dialog-content');
+            if (dialogContent) {
+                // Clear previous content
+                dialogContent.innerHTML = '';
+                dialogContent.appendChild(closeButton);
+                dialogContent.appendChild(clonedPresetContainer);
+
+                // Show the dialog
+                dialog.style.display = 'block';
+
+                // Ensure styles are applied
+                applyStyles(layoutType); // Call with layoutType to apply specific styles
+            }
+        }
+
+        // Event listeners for closing the dialog
+        closeButton.addEventListener('click', closePresetDialog);
+        window.addEventListener('click', (event) => {
+            if (event.target === dialog) {
+                closePresetDialog();
+            }
+        });
+
+        // Function to close the dialog
+        function closePresetDialog() {
+            dialog.style.display = 'none';
+            document.body.classList.remove('no-scroll'); // Enable scrolling
+        }
+    }
+
+    function applyStyles(isGridLayout) {
+        const style = document.createElement('style');
+        style.textContent = `
+           .dialog {
+                display: none; /* Hidden by default */
+                position: fixed;
+                left: 50%; /* Center horizontally */
+                top: 0; /* Cover full screen vertically */
+                transform: translateX(-50%); /* Center horizontally */
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.5); /* Semi-transparent background */
+                z-index: 1000; /* Make sure it appears on top */
+                overflow: hidden; /* Prevent scrolling within the dialog */
+            }
+
+            .dialog-content {
+                background: #404040;
+                padding: 20px;
+                border-radius: 5px;
+                position: absolute; /* Position absolutely within the dialog */
+                top: 35%; /* Move down from vertical center (adjust this value) */
+                left: 50%; /* Center horizontally within the dialog */
+                transform: translate(-50%, -50%); /* Adjust to center content */
+                width: 80%;
+                max-width: 800px;
+                max-height: 80vh; /* Limit height to viewport height */
+                overflow-y: auto; /* Allow scrolling within the dialog content if it overflows */
+            }
+
+            .dialog.grid-layout .dialog-content {
+                width: 90%; /* Adjust width for grid layout */
+                max-width: 60%; /* Example max width for grid layout */
+            }
+
+            .dialog.list-layout .dialog-content {
+                width: 80%; /* Adjust width for list layout */
+                max-width: 500px; /* Example max width for list layout */
+            }
+
+            .close-button {
+                float: right;
+                font-size: 24px;
+                cursor: pointer;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Function to reattach event listeners to cloned buttons and images
+    function reattachListeners(container) {
+        const presetButtons = container.querySelectorAll('.preset-button');
+        const customPresetButtons = container.querySelectorAll('.custom-preset-button');
+
+        // Reattach event listeners to preset buttons
+        presetButtons.forEach(button => {
+            button.addEventListener('click', () => sendLoadCommand(selectedCamera, button.textContent));
+        });
+
+        // Reattach event listeners to custom preset buttons
+        customPresetButtons.forEach(button => {
+            button.addEventListener('click', () => sendCustomDialogCommand(selectedCamera, button.textContent));
+        });
+
+        // Reattach event listeners to images
+        const images = container.querySelectorAll('img');
+        images.forEach(image => {
+            image.addEventListener('click', (event) => {
+                const button = event.target.closest('.preset-button-container')?.querySelector('.preset-button')
+                    || event.target.closest('.custom-preset-button-container')?.querySelector('.custom-preset-button');
+                if (button) {
+                    button.click();
+                }
+            });
+        });
+    }
+
+
 
     // Function to remove active class from all icons
     const removeActiveClassFromIcons = () => {
@@ -396,22 +658,22 @@ document.addEventListener('DOMContentLoaded', function () {
         toggleDirectionContainer(isFullPTZEnabled);
     };
 
-
-    // Function to switch to video view
     const switchToVidView = () => {
         removeActiveClassFromIcons(); // Remove active class from all icons
         vidIcon.classList.add('active-icon'); // Add active class to video icon
         localStorage.setItem('viewMode', 'vid'); // Save the selection to localStorage
-
+        fetchTwitchURL();
 
         // Check if 'preset-pad' is not collapsed and toggle it if needed
         const prePad = document.querySelector('.preset-container');
         if (!prePad.classList.contains('collapsed')) {
             toggleDirectionPad('.preset-container');
         }
+
         const videoPlaceholder = document.getElementById("video-placeholder");
         videoPlaceholder.classList.add("video-active");
         videoPlaceholder.style.display = 'block';
+
         // Select all elements with the class 'preset-container-card'
         const presetCards = document.querySelectorAll('.preset-container-card');
 
@@ -420,65 +682,66 @@ document.addEventListener('DOMContentLoaded', function () {
             card.classList.add('hidden');
         });
 
-        // Check if the container is already created to avoid duplicates
+        // Check if the videoContainerCard already exists
+        let existingContainer = document.getElementById("video-container-card");
+        if (existingContainer) {
+            // If it exists, simply show it and return
+            existingContainer.style.display = 'block';
+            return;
+        }
+
         // Create the parent div
         const videoContainerCard = document.createElement("div");
         videoContainerCard.id = "video-container-card";
         videoContainerCard.style.backgroundColor = '#1c1c1c';
         videoContainerCard.style.boxShadow = '0 0 10px 0 rgba(0,0,0,0.45) inset';
-        videoContainerCard.style.borderRadius = '10px';  // Position at left of container
-        videoContainerCard.style.paddingLeft = '18px';  // Position at left of container
+        videoContainerCard.style.borderRadius = '10px';
+        videoContainerCard.style.paddingLeft = '18px';
+        videoContainerCard.style.position = 'absolute';
+        videoContainerCard.style.width = 'calc(99%)';
+        videoContainerCard.style.height = 'calc(98vh)';
+        videoContainerCard.style.top = '0';
+        videoContainerCard.style.left = '-18px';
+        videoContainerCard.style.margin = '10px';
 
-        // Set parentDiv styles for positioning and size
-        videoContainerCard.style.position = 'absolute';  // Make it positioned relative to its container
-        videoContainerCard.style.width = 'calc(99%)';  // 10% wider + margin compensation
-        videoContainerCard.style.height = 'calc(98vh)'; // 10% taller + margin compensation
-        videoContainerCard.style.top = '0';  // Position at top of container
-        videoContainerCard.style.left = '-18px';  // Position at left of container
-
-        // Add a small margin to compensate for potential video container border
-        videoContainerCard.style.margin = '10px';  // Adjust margin value as needed
-      
-      
         const buttonDiv = document.createElement("div");
         buttonDiv.classList.add("button-container");
-        
-        // Create the first button
+
+        // Create buttons
         const button1 = document.createElement("button");
         button1.classList.add("vidbutton");
-        button1.textContent = "Video";
-        
-        // Add event listener for click
+        button1.textContent = "Full Cam";
         button1.addEventListener('click', function () {
-            toggleVideo('video');
+            showCamera(1);
         });
-        
-        // Create the second button
+
         const button2 = document.createElement("button");
         button2.classList.add("vidbutton2");
         button2.textContent = "Presets";
-        
-        // Add event listener for click
         button2.addEventListener('click', function () {
-            toggleVideo('presets');
+            openPresetDialog();
         });
-        
-        // Create the third button
+
         const button3 = document.createElement("button");
         button3.classList.add("vidbutton3");
         button3.textContent = "Area Select";
-        
-        // Add event listener for click
         button3.addEventListener('click', function () {
             toggleOverlayZIndex();
         });
-        
+
+        const button4 = document.createElement("button");
+        button4.classList.add("vidbutton4");
+        button4.textContent = "Click On";
+        button4.classList.add("highlighted"); // Add a class to indicate highlighted state
+        button4.addEventListener('click', function () {
+            toggleOverlay();
+            updateClickButtonLabel();
+        });
+
         // Create a container for the left buttons
         const leftButtonDiv = document.createElement("div");
         leftButtonDiv.classList.add("left-buttons");
-        leftButtonDiv.appendChild(button1);
         leftButtonDiv.appendChild(button2);
-        
         buttonDiv.appendChild(leftButtonDiv);
         buttonDiv.appendChild(button3);
 
@@ -489,12 +752,12 @@ document.addEventListener('DOMContentLoaded', function () {
         videoContainer.style.height = '100vh';
         videoContainer.style.overflow = 'hidden';
         videoContainer.style.display = 'block';
-        videoContainer.style.marginTop = '40px'
-        videoContainer.style.marginLeft = '-5px'
+        videoContainer.style.marginTop = '40px';
+        videoContainer.style.marginLeft = '-5px';
 
         const iframe = document.createElement("iframe");
         iframe.id = "twitchIframe";
-        iframe.src = "https://player.twitch.tv/?channel=alveussanctuary&parent=localhost";
+        iframe.src = twitchURL;
         iframe.frameBorder = "0";
         iframe.allow = "autoplay; fullscreen";
         iframe.allowFullscreen = true;
@@ -502,6 +765,8 @@ document.addEventListener('DOMContentLoaded', function () {
         iframe.style.height = '90%';
         iframe.style.objectFit = 'cover';
         iframe.style.position = 'absolute';
+        iframe.style.zIndex = '1';
+
 
         const boxOverlay = document.createElement("div");
         boxOverlay.id = "boxoverlay";
@@ -510,7 +775,7 @@ document.addEventListener('DOMContentLoaded', function () {
         boxOverlay.style.left = '0';
         boxOverlay.style.width = '100%';
         boxOverlay.style.height = '100%';
-        boxOverlay.style.zIndex = '1'; // Set higher z-index for canvas-overlay
+        boxOverlay.style.zIndex = '1';
 
         const clickOverlay = document.createElement("div");
         clickOverlay.id = "clickoverlay";
@@ -519,7 +784,9 @@ document.addEventListener('DOMContentLoaded', function () {
         clickOverlay.style.left = '0';
         clickOverlay.style.width = '100%';
         clickOverlay.style.height = '100%';
-        clickOverlay.style.zIndex = '3'; // Set higher z-index for canvas-overlay
+        clickOverlay.style.zIndex = '3';
+        clickOverlay.style.cursor = 'pointer';
+
 
         const canvasOverlay = document.createElement("canvas");
         canvasOverlay.id = "canvasoverlay";
@@ -528,15 +795,14 @@ document.addEventListener('DOMContentLoaded', function () {
         canvasOverlay.style.left = '0';
         canvasOverlay.style.width = '100%';
         canvasOverlay.style.height = '100%';
-        canvasOverlay.style.zIndex = '2'; // Set higher z-index for canvas-overlay
+        canvasOverlay.style.zIndex = '2';
 
-        buttonDiv.appendChild(button1);
+
         buttonDiv.appendChild(button2);
         buttonDiv.appendChild(button3);
-        
-        
+        buttonDiv.appendChild(button4);
 
-        // Add the iframe and click overlay to the video-container
+        // Add the iframe and overlays to the video-container
         videoContainer.appendChild(iframe);
         videoContainer.appendChild(boxOverlay);
         videoContainer.appendChild(clickOverlay);
@@ -549,9 +815,12 @@ document.addEventListener('DOMContentLoaded', function () {
         videoContainerCard.appendChild(videoContainer);
         videoPlaceholder.appendChild(videoContainerCard);
 
+
         loadcanvas();
         loadboxoutlines();
         loadclickoverlay();
+        setupEventListeners();
+
     };
 
     // Check if there is a previous selection stored in localStorage
@@ -569,6 +838,103 @@ document.addEventListener('DOMContentLoaded', function () {
     vidIcon.addEventListener('click', switchToVidView);
 
 });
+
+function setupEventListeners() {
+    const clickOverlay = document.getElementById('clickoverlay');
+    const canvasOverlay = document.getElementById('canvasoverlay');
+    const canvasContainers = document.querySelectorAll('.canvas-container');
+
+    function handleRightClick(event) {
+        event.preventDefault(); // Prevent the default context menu from appearing
+        toggleOverlayZIndex();
+    }
+
+    // Remove existing listeners if needed
+    clickOverlay.removeEventListener('contextmenu', handleRightClick);
+    canvasOverlay.removeEventListener('contextmenu', handleRightClick);
+    canvasContainers.forEach(container => container.removeEventListener('contextmenu', handleRightClick));
+
+    // Add listeners
+    clickOverlay.addEventListener('contextmenu', handleRightClick);
+    canvasOverlay.addEventListener('contextmenu', handleRightClick);
+
+    canvasContainers.forEach(container => {
+        container.addEventListener('contextmenu', handleRightClick);
+    });
+}
+
+const toggleOverlay = () => {
+    const canvasOverlay = document.getElementById('canvasoverlay');
+    const canvasContainer = document.querySelector('.canvas-container');
+    const clickOverlay = document.getElementById('clickoverlay');
+    const boxOverlay = document.getElementById('boxoverlay');
+    const iframe = document.getElementById("twitchIframe");
+    const videoPlaceholder = document.getElementById("video-placeholder");
+
+    if (iframe.style.zIndex === '1') {
+        iframe.style.zIndex = '5';
+    } else if (iframe.style.zIndex === '5') {
+        iframe.style.zIndex = '1';
+    }
+    setTimeout(() => {
+        updateClickButtonLabel();
+    }, 0);
+
+};
+
+function updateClickButtonLabel() {
+    const iframe = document.getElementById("twitchIframe");
+    const button4 = document.querySelector('.vidbutton4'); // Adjust selector as needed
+    const button3 = document.querySelector('.vidbutton3'); // Adjust selector as needed
+
+
+    // Use getComputedStyle to get the actual zIndex if needed
+    const isOverlayOn = iframe.style.zIndex === '1';
+    // Update button label based on the condition
+    button4.textContent = isOverlayOn ? "Click On" : "Click Off";
+
+    if (isOverlayOn) {
+        button3.style.visibility = 'visible'; // Show button3
+        button4.classList.add('highlighted');
+    } else {
+        button3.style.visibility = 'hidden'; // Hide button3
+        button4.classList.remove('highlighted');
+    }
+}
+
+// Function to update button highlight based on clickOverlay zIndex
+const updateButtonHighlight = () => {
+    const clickOverlay = document.getElementById('clickoverlay');
+    const button3 = document.querySelector('.vidbutton3');
+
+    if (clickOverlay && button3) {
+        if (clickOverlay.style.zIndex === '2') {
+            button3.classList.add('highlighted');
+        } else {
+            button3.classList.remove('highlighted');
+        }
+    }
+};
+
+const toggleOverlayZIndex = () => {
+    const canvasOverlay = document.getElementById('canvasoverlay');
+    const canvasContainer = document.querySelector('.canvas-container');
+    const clickOverlay = document.getElementById('clickoverlay');
+    const iframe = document.getElementById("twitchIframe");
+    const videoPlaceholder = document.getElementById("video-placeholder");
+
+    if (clickOverlay.style.zIndex === '3') {
+        clickOverlay.style.zIndex = '2';
+        canvasOverlay.style.zIndex = '3';
+        canvasContainer.style.display = '';
+        loadcanvas();
+    } else if (clickOverlay.style.zIndex === '2') {
+        clickOverlay.style.zIndex = '3';
+        canvasOverlay.style.zIndex = '2';
+        canvasContainer.style.display = 'none';
+    }
+    updateButtonHighlight();
+};
 
 
 // Main event listener to handle clicks on the overlay
@@ -613,6 +979,8 @@ function loadcanvas() {
     // Define scaling factors relative to 1080p
     const widthScale = effectiveWidth / 1920;
     const heightScale = effectiveHeight / 1080;
+
+
 
     console.log(`Width Scale: ${widthScale}, Height Scale: ${heightScale}`);
 
@@ -668,160 +1036,235 @@ function loadcanvas() {
     });
 
     // Initialize the Fabric.js canvas
-const canvas = new fabric.Canvas(canvasOverlay, {
-    width: viewportWidth,
-    height: viewportHeight
-});
-
-console.log("Fabric.js canvas initialized with width:", viewportWidth, "and height:", viewportHeight);
-
-let isDrawing = false;
-let startPoint = { x: 0, y: 0 };
-let rect;
-let button;
-
-canvas.on('mouse:down', function(options) {
-    if (options.target) return;
-    isDrawing = true;
-    startPoint = { x: options.e.offsetX, y: options.e.offsetY };
-    console.log("Start point set to:", startPoint);
-});
-
-canvas.on('mouse:move', function(options) {
-    if (!isDrawing) return;
-    if (rect) {
-        canvas.remove(rect);
-    }
-    rect = new fabric.Rect({
-        left: startPoint.x,
-        top: startPoint.y,
-        width: options.e.offsetX - startPoint.x,
-        height: options.e.offsetY - startPoint.y,
-        fill: 'rgba(255,0,0,0.3)',
-        stroke: 'red',
-        strokeWidth: 2,
-        selectable: true,
-        hasControls: true,
-        hasBorders: true
+    const canvas = new fabric.Canvas(canvasOverlay, {
+        width: viewportWidth,
+        height: viewportHeight
     });
-    canvas.add(rect);
-});
 
-canvas.on('mouse:up', function(options) {
-    isDrawing = false;
-    if (rect) {
-        rect.set({
+    console.log("Fabric.js canvas initialized with width:", viewportWidth, "and height:", viewportHeight);
+
+    let isDrawing = false;
+    let startPoint = { x: 0, y: 0 };
+    let rect;
+    let button;
+
+    canvas.on('mouse:down', function (options) {
+        if (options.target) return;
+        isDrawing = true;
+        startPoint = { x: options.e.offsetX, y: options.e.offsetY };
+        console.log("Start point set to:", startPoint);
+    });
+
+    canvas.on('mouse:move', function (options) {
+        if (!isDrawing) return;
+        if (rect) {
+            canvas.remove(rect);
+            if (rect.button) {
+                canvas.remove(rect.button);
+            }
+        }
+        rect = new fabric.Rect({
+            left: startPoint.x,
+            top: startPoint.y,
+            width: options.e.offsetX - startPoint.x,
+            height: options.e.offsetY - startPoint.y,
+            fill: 'rgba(255,0,0,0.3)',
+            stroke: 'red',
+            strokeWidth: 2,
             selectable: true,
             hasControls: true,
             hasBorders: true,
-       
+            originX: 'left',
+            originY: 'top'
+        });
+        canvas.add(rect);
+    });
+
+    canvas.on('mouse:up', function (options) {
+        isDrawing = false;
+        if (rect) {
+            rect.set({
+                selectable: true,
+                hasControls: true,
+                hasBorders: true,
                 cornerColor: 'white', // Color of the resize controls
-                cornerStrokeColor: 'white', // Color of the border around the resize controls
+                cornerStrokeColor: 'yellow', // Color of the border around the resize controls
                 cornerSize: 10 // Size of the resize controls
-            
-        });
+            });
 
-        // Remove the old button if it exists
-        if (button) {
-            canvas.remove(button);
+            // Check if the button already exists
+            if (!rect.button) {
+                // Create a new button-like object inside the rectangle
+                const buttonSize = Math.min(rect.width, rect.height) * 0.1; // Button size as a percentage of the smallest dimension
+                button = new fabric.Rect({
+                    left: rect.left + rect.width - buttonSize, // Position relative to rectangle
+                    top: rect.top + rect.height - buttonSize, // Position relative to rectangle
+                    width: buttonSize,
+                    height: buttonSize,
+                    fill: 'blue',
+                    selectable: false,
+                    hasControls: false,
+                    hasBorders: false,
+                    hoverCursor: 'pointer' // Change cursor to pointer on hover
+                });
+
+                canvas.add(button);
+                button.bringToFront(); // Bring the button to the front
+                canvas.renderAll();
+
+                // Attach the button to the rectangle
+                rect.button = button;
+            }
         }
+    });
 
-        // Add a button-like object inside the rectangle
-        button = new fabric.Rect({
-            left: rect.left + rect.width + 10,
-            top: rect.top + rect.height + 10,
-            width: 20,
-            height: 20,
-            fill: 'blue',
-            selectable: false,
-            hasControls: false,
-            hasBorders: false,
-            hoverCursor: 'pointer' // Change cursor to pointer on hover
+    // Function to update the button position relative to the rectangle
+    function updateButtonPosition(rect) {
+        const buttonSize = Math.min(rect.width, rect.height) * 0.1; // Button size as a percentage of the smallest dimension
+        const rectLeft = rect.left + (rect.width * rect.scaleX);
+        const rectTop = rect.top + (rect.height * rect.scaleY);
+
+        rect.button.set({
+            left: rectLeft - buttonSize,
+            top: rectTop - buttonSize,
+            width: buttonSize,
+            height: buttonSize
         });
-
-        canvas.add(button);
-        button.bringToFront(); // Bring the button to the front
+        rect.button.setCoords();
         canvas.renderAll();
     }
-});
 
-canvas.on('mouse:down', function(options) {
-    if (options.target === button) {
-        if (rect) {
+    // Update button position on move or resize
+    canvas.on('object:moving', function (options) {
+        const rect = options.target;
+        if (rect.type === 'rect' && rect.button) {
+            updateButtonPosition(rect);
+        }
+    });
 
-            const rectBounds = rect.getBoundingRect();
-            const centerX = rectBounds.left + rectBounds.width / 2;
-            const centerY = rectBounds.top + rectBounds.height / 2;
-            
-            // Use the same box boundaries as the click overlay
-            const updatedBoxBoundaries = boxBoundaries;
-            
-            // Log the updated box boundaries
-            updatedBoxBoundaries.forEach((box) => {
-                console.log(`Updated Box ID: ${box.id}, x: ${box.x.toFixed(2)}, y: ${box.y.toFixed(2)}, width: ${box.width.toFixed(2)}, height: ${box.height.toFixed(2)}`);
-            });
-            
-            // Find the box containing the rectangle coordinates
-            const clickedBox = updatedBoxBoundaries.find(
-                (box) =>
-                    centerX >= box.x &&
-                    centerX < box.x + box.width &&
-                    centerY >= box.y &&
-                    centerY < box.y + box.height
-            );
-            
-            if (!clickedBox) {
-                console.error("Rectangle drawn outside defined boxes.");
-                console.log(`Rectangle center coordinates: X=${centerX}, Y=${centerY}`);
-                return;
+    canvas.on('object:scaling', function (options) {
+        const rect = options.target;
+        if (rect.type === 'rect' && rect.button) {
+            updateButtonPosition(rect);
+        }
+    });
+
+    canvas.on('mouse:down', function (options) {
+        if (options.target === button) {
+            if (rect) {
+
+                const rectBounds = rect.getBoundingRect();
+                const centerX = rectBounds.left + rectBounds.width / 2;
+                const centerY = rectBounds.top + rectBounds.height / 2;
+
+                // Use the same box boundaries as the click overlay
+                const updatedBoxBoundaries = boxBoundaries;
+
+                // Log the updated box boundaries
+                updatedBoxBoundaries.forEach((box) => {
+                    console.log(`Updated Box ID: ${box.id}, x: ${box.x.toFixed(2)}, y: ${box.y.toFixed(2)}, width: ${box.width.toFixed(2)}, height: ${box.height.toFixed(2)}`);
+                });
+
+                // Find the box containing the rectangle coordinates
+                const clickedBox = updatedBoxBoundaries.find(
+                    (box) =>
+                        centerX >= box.x &&
+                        centerX < box.x + box.width &&
+                        centerY >= box.y &&
+                        centerY < box.y + box.height
+                );
+
+                if (!clickedBox) {
+                    console.error("Rectangle drawn outside defined boxes.");
+                    console.log(`Rectangle center coordinates: X=${centerX}, Y=${centerY}`);
+                    return;
+                }
+
+                console.log(`Rectangle drawn within box ID: ${clickedBox.id}`)
+
+                // Calculate scaled dimensions of the rectangle
+                const scaledRectWidth = rectBounds.width * (1920 / clickedBox.width);
+                const scaledRectHeight = rectBounds.height * (1080 / clickedBox.height);
+
+
+                // Calculate zoom level based on the scaled rectangle dimensions
+                const zoomWidth = 1920 / scaledRectWidth;
+                const zoomHeight = 1080 / scaledRectHeight;
+                const zoom = Math.floor(Math.min(zoomWidth, zoomHeight) * 100);
+
+                // Adjust center coordinates by subtracting the offsets
+                const adjustedCenterX = centerX - horizontalOffset;
+                const adjustedCenterY = centerY - verticalOffset;
+
+                // Define scaling factors relative to 1080p
+                const widthScale = 1920 / effectiveWidth;
+                const heightScale = 1080 / effectiveHeight;
+
+                // Convert rectangle coordinates to iframe coordinates using the same scale factors
+                const scledX = adjustedCenterX * widthScale;
+                const scledY = adjustedCenterY * heightScale;
+
+                const adjrecL = rectBounds.left - horizontalOffset;
+                const adjrecT = rectBounds.top - verticalOffset;
+
+                const recL = adjrecL * widthScale;
+                const recT = adjrecT * heightScale;
+
+                const recwoff = rectBounds.width - horizontalOffset;
+                const rechoff = rectBounds.height - verticalOffset;
+
+                const recwS = rectBounds.width * widthScale;
+                const rechS = rectBounds.height * heightScale;
+
+                console.log("rectBounds.left:", recL);
+                console.log("rectBounds.top:", recT);
+                console.log("rectBounds.width:", recwS);
+                console.log("rectBounds.height:", rechS);
+
+                console.log(`Scaled coordinates for 1080p: X=${scledX}, Y=${scledY}, Zoom=${zoom}`);
+
+                // Send the command
+                sendclickCommand(scledX, scledY, zoom);
+
+
+                // Remove the rectangle and button
+                canvas.remove(rect);
+                canvas.remove(button);
+                rect = null; // Reset the rect variable
+                button = null; // Reset the button variable
+                canvas.renderAll();
             }
-            
-            console.log(`Rectangle drawn within box ID: ${clickedBox.id}`);
-            
-            const relX = (centerX - clickedBox.x) / clickedBox.width; // Get relative X position in the box
-            const relY = (centerY - clickedBox.y) / clickedBox.height; // Get relative Y position in the box
-            
-            // Scale relative coordinates to a 1920x1080 context
-            const scaledX = relX * 1920; // Scale to 1920px width
-            const scaledY = relY * 1080; // Scale to 1080px height
-            
-        // Calculate scaled dimensions of the rectangle
-        const scaledRectWidth = rectBounds.width * (1920 / clickedBox.width);
-        const scaledRectHeight = rectBounds.height * (1080 / clickedBox.height);
+        }
+    });
 
-        // Calculate zoom level based on the scaled rectangle dimensions
-        const zoomWidth = 1920 / scaledRectWidth;
-        const zoomHeight = 1080 / scaledRectHeight;
-        const zoom = Math.min(zoomWidth, zoomHeight) * 100;
-            
-            console.log(`Scaled coordinates for 1080p: X=${scaledX}, Y=${scaledY}, Zoom=${zoom}`);
-            
-            // Send the command
-            sendAreazoomCommand(scaledX, scaledY, zoom);
-
-            // Remove the rectangle and button
-            canvas.remove(rect);
-            canvas.remove(button);
-            rect = null; // Reset the rect variable
-            button = null; // Reset the button variable
-            canvas.renderAll();
+ // Add a keydown event listener to the document
+document.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') {
+        // Check if the button is present on the canvas
+        if (button && canvas.getObjects().includes(button)) {
+            // Trigger the button's click
+            const options = {
+                target: button
+            };
+            canvas.fire('mouse:down', options);
         }
     }
-});
+});   
 
-// Handle the Escape key press to remove the rectangle
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        if (rect) {
-            canvas.remove(rect);
-            canvas.remove(button);
-            rect = null; // Reset the rect variable
-            button = null; // Reset the button variable
-            canvas.renderAll();
+    // Handle the Escape key press to remove the rectangle
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            if (rect) {
+                canvas.remove(rect);
+                canvas.remove(button);
+                rect = null; // Reset the rect variable
+                button = null; // Reset the button variable
+                canvas.renderAll();
+            }
         }
-    }
-});
+    });
 }
+
 
 // Main event listener to handle clicks on the overlay
 function loadboxoutlines() {
@@ -929,6 +1372,8 @@ function loadboxoutlines() {
         console.log(`Box ID: ${box.id}, x: ${box.x}, y: ${box.y}, width: ${box.width}, height: ${box.height}`);
     });
 
+    boxOverlay.innerHTML = '';
+
     // Function to add box outlines with center dots to the click overlay
     boxBoundaries.forEach((box) => {
         // Create the box outline element
@@ -976,24 +1421,22 @@ function loadboxoutlines() {
     `;
 }
 
-function loadclickoverlay() {
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
 
+window.addEventListener('resize', debounce(loadboxoutlines, 200));
+
+function loadclickoverlay() {
     const clickOverlay = document.getElementById("clickoverlay");
     if (!clickOverlay) {
         console.error("Click-overlay element not found.");
         return;
     }
-
-    // Define styles for box outlines to ensure visibility
-    const styleElement = document.createElement("style");
-    styleElement.innerHTML = `
-        .box-outline {
-            border: 1px solid red; // Outline border for visibility
-            position: absolute;
-            z-index: 1000; // Ensures outlines are on top
-        }
-    `;
-    document.head.appendChild(styleElement);
 
     // Get viewport dimensions to calculate scaling factors
     const iframe = document.getElementById("twitchIframe");
@@ -1082,174 +1525,173 @@ function loadclickoverlay() {
         console.log(`Box ID: ${box.id}, x: ${box.x}, y: ${box.y}, width: ${box.width}, height: ${box.height}`);
     });
 
-    // Function to add box outlines with center dots to the click overlay
-    boxBoundaries.forEach((box) => {
-        // Create the box outline element
-        const boxElement = document.createElement("div");
-        boxElement.classList.add("box-outline");
-
-        // Set the position and size of the box outline
-        boxElement.style.position = "absolute";
-        boxElement.style.top = `${box.y}px`;
-        boxElement.style.left = `${box.x}px`;
-        boxElement.style.width = `${box.width}px`;
-        boxElement.style.height = `${box.height}px`;
-
-        // Append the box outline to the click overlay
-        clickOverlay.appendChild(boxElement);
-    });
-
-
     // Handle click events to determine corrected x and y
     clickOverlay.addEventListener("click", async (e) => {
         const clickX = e.clientX;
         const clickY = e.clientY;
-
         console.log(`Raw click coordinates: X=${clickX}, Y=${clickY}`);
 
-        // Use getBoundingClientRect() to dynamically get the current position of each box
-        const updatedBoxBoundaries = boxBoundaries.map((box, index) => {
-            const boxElement = clickOverlay.querySelector(`.box-outline:nth-child(${index + 1})`);
-            if (boxElement) {
-                const rect = boxElement.getBoundingClientRect();
-                return {
-                    id: box.id,
-                    x: rect.left,
-                    y: rect.top,
-                    width: rect.width,
-                    height: rect.height,
-                };
-            }
-            return box; // Fallback to original boundary if not found
-        });
-        // Log the updated box boundaries
-        updatedBoxBoundaries.forEach((box) => {
-            console.log(`Updated Box ID: ${box.id}, x: ${box.x.toFixed(2)}, y: ${box.y.toFixed(2)}, width: ${box.width.toFixed(2)}, height: ${box.height.toFixed(2)}`);
-        });
+        
+        // Get iframe dimensions and position
+        const iframeRect = iframe.getBoundingClientRect();
+        const iframeWidth = iframeRect.width;
+        const iframeHeight = iframeRect.height;
 
-        // Find the box containing the click coordinates
-        const clickedBox = updatedBoxBoundaries.find(
-            (box) =>
-                clickX >= box.x &&
-                clickX < box.x + box.width &&
-                clickY >= box.y &&
-                clickY < box.y + box.height
-        );
+        console.log(`Iframe Rect:`, iframeRect);
 
-        if (!clickedBox) {
-            console.error("Click occurred outside defined boxes.");
-            console.log(`Raw click coordinates: X=${clickX}, Y=${clickY}`);
-            return;
+        // Get raw click coordinates relative to the viewport
+        const rawClickX = e.clientX;
+        const rawClickY = e.clientY;
+
+        console.log(`Raw click coordinates: X=${rawClickX}, Y=${rawClickY}`);
+
+        // Calculate click coordinates relative to the iframe
+        const relativeX = rawClickX - iframeRect.left;
+        const relativeY = rawClickY - iframeRect.top;
+
+        console.log(`Relative click coordinates within iframe: X=${relativeX}, Y=${relativeY}`);
+
+        // Define content size with 16:9 aspect ratio
+        const contentWidth = 1920;
+        const contentHeight = 1080;
+        const contentAspectRatio = contentWidth / contentHeight;
+
+        // Calculate effective dimensions of the content area
+        let effectiveWidth, effectiveHeight;
+
+        if (iframeWidth / iframeHeight > contentAspectRatio) {
+            // Pillarbox (vertical black bars)
+            effectiveHeight = iframeHeight;
+            effectiveWidth = effectiveHeight * contentAspectRatio;
+        } else {
+            // Letterbox (horizontal black bars)
+            effectiveWidth = iframeWidth;
+            effectiveHeight = effectiveWidth / contentAspectRatio;
         }
 
-        console.log(`Clicked within box ID: ${clickedBox.id}`);
+        // Calculate offsets
+        const horizontalOffset = (iframeWidth - effectiveWidth) / 2;
+        const verticalOffset = (iframeHeight - effectiveHeight) / 2;
 
-        const relX = (clickX - clickedBox.x) / clickedBox.width; // Get relative X position in the box
-        const relY = (clickY - clickedBox.y) / clickedBox.height; // Get relative Y position in the box
+        console.log(`Effective dimensions: Width=${effectiveWidth}, Height=${effectiveHeight}`);
+        console.log(`Offsets: Horizontal=${horizontalOffset}, Vertical=${verticalOffset}`);
 
-        // Scale relative coordinates to a 1920x1080 context
-        const scaledX = relX * 1920; // Scale to 1920px width
-        const scaledY = relY * 1080; // Scale to 1080px height
+        // Calculate coordinates within the content area
+        const scledX = (relativeX - horizontalOffset) / effectiveWidth * contentWidth;
+        const scledY = (relativeY - verticalOffset) / effectiveHeight * contentHeight;
 
-        console.log(`Scaled coordinates for 1080p: X=${scaledX}, Y=${scaledY}`);
+        // Check if the click is within any of the box boundaries
+        let isWithinBox = false;
+        for (const box of boxBoundaries) {
+            if (
+                relativeX >= box.x &&
+                relativeX <= box.x + box.width &&
+                relativeY >= box.y &&
+                relativeY <= box.y + box.height
+            ) {
+                isWithinBox = true;
+                break;
+            }
+        }
 
-        sendcenterCommand(scaledX, scaledY);
+        if (isWithinBox) {
+            sendclickCommand(scledX, scledY);
+        } else {
+            console.log("Click is outside the box boundaries.");
+        }
 
     });
 }
 
-// Function to update button highlight based on clickOverlay zIndex
-const updateButtonHighlight = () => {
-    const clickOverlay = document.getElementById('clickoverlay');
-    const button3 = document.querySelector('.vidbutton3');
+function preloadImages(cameras) {
+    cameras.forEach(camera => {
+        const img = new Image();
+        img.src = `camera-img/${camera.name}.webp`;
+        img.onerror = function () {
+            img.src = 'img/logo.webp';
+        };
+    });
+}
 
-    if (clickOverlay && button3) {
-        if (clickOverlay.style.zIndex === '2') {
-            button3.classList.add('highlighted');
+function preloadPresetPadImages(cameraName, presets) {
+    presets.forEach(preset => {
+        const img = new Image();
+        img.src = `./button-img/${cameraName.toLowerCase()}/${preset}.png`;
+        img.onerror = function () {
+            this.src = `./button-img/${cameraName.toLowerCase()}/home.png`;
+            this.style.backgroundColor = '#222222';
+            this.style.filter = 'blur(3px)';
+            this.onerror = function () {
+                this.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+                this.style.backgroundColor = '#222222';
+                this.style.borderTopLeftRadius = '15px';
+                this.style.borderTopRightRadius = '15px';
+            };
+        };
+    });
+}
+
+async function fetchCameraDataAndPopulateUI() {
+    try {
+        const response = await fetch('cameras.json');
+        const data = await response.json();
+
+        camerasData = data;
+        preloadImages(camerasData.cameras); // Preload images
+        populateCameraButtons(camerasData.cameras);
+        populateDropdowns(camerasData.cameras);
+
+        const storedCamera = localStorage.getItem('selectedCamera');
+        if (storedCamera) {
+            selectCamera(storedCamera);
         } else {
-            button3.classList.remove('highlighted');
+            selectCamera(camerasData.cameras[0].name);
         }
+    } catch (error) {
+        console.error('Error fetching camera data:', error);
     }
-};
 
-
-const toggleOverlayZIndex = () => {
-    const canvasOverlay = document.getElementById('canvasoverlay');
-    const canvasContainer = document.querySelector('.canvas-container');
-    const clickOverlay = document.getElementById('clickoverlay');
-    const iframe = document.getElementById("twitchIframe");
-    const videoPlaceholder = document.getElementById("video-placeholder");
-
-    if (clickOverlay.style.zIndex === '3') {
-        clickOverlay.style.zIndex = '2';
-        canvasOverlay.style.zIndex = '3';
-        canvasContainer.style.display = '';
-        loadcanvas();
-    } else if (clickOverlay.style.zIndex === '2') {
-        clickOverlay.style.zIndex = '3';
-        canvasOverlay.style.zIndex = '2';
-        canvasContainer.style.display = 'none';
-        loadclickoverlay();
-    }
-    updateButtonHighlight();
-
-};
-
-function fetchCameraDataAndPopulateUI() {
-    fetch('cameras.json') // Fetch the JSON file
-        .then(response => response.json()) // Parse JSON response
-        .then(data => {
-            camerasData = data; // Store camera data
-            populateCameraButtons(camerasData.cameras); // Populate camera buttons
-            populateDropdowns(camerasData.cameras); // Populate dropdown menus
-            const storedCamera = localStorage.getItem('selectedCamera');
-            if (storedCamera) {
-                selectCamera(storedCamera); // Select the previously selected camera
-            } else {
-                selectCamera(camerasData.cameras[0].name); // Select the first camera by default
-            }
-
-        })
-        .catch(error => console.error('Error fetching camera data:', error));
 }
 
 function populateCameraButtons(cameras) {
     const cameraContainer = document.querySelector('.camera-container');
-    cameras.forEach(camera => {
-      const buttonContainer = document.createElement('div'); // Create a container for button and image
-      buttonContainer.classList.add('camera-button-container'); // Add styling class
-  
-      // Create image element
-      const image = document.createElement('img');
-      image.classList.add('camera-thumbnail'); // Add styling class
-  
-      // Construct image source based on camera name and directory
-      image.src = `camera-img/${camera.name}.webp`;
-      image.alt = ``; // Set alt text for accessibility
-      
-      image.onerror = function() {
-      image.src = 'img/logo.webp';
-     }
-      // Trigger button click event when image is clicked
-      image.addEventListener('click', () => {
-      // Programmatically trigger the click event on the button
-        button.click();
-      });
-      // Create button element
-      const button = document.createElement('button');
-      button.classList.add('camera-button');
-      button.textContent = camera.name;
-      button.addEventListener('click', () => selectCamera(camera.name));
+    const fragment = document.createDocumentFragment();
+    const thumbnailCameraCheckboxState = localStorage.getItem('CamerathumbnailVisibility');
+    const thumbnailCameraCheckboxChecked = thumbnailCameraCheckboxState === 'true';
+ console.log("camerathumb state:", thumbnailCameraCheckboxChecked);
 
-      // Append image and button to container (optional: adjust order for desired layout)
-      buttonContainer.appendChild(image);
-      buttonContainer.appendChild(button);
-  
-      // Append container to camera container
-      cameraContainer.appendChild(buttonContainer);
+    cameras.forEach(camera => {
+        const buttonContainer = document.createElement('div');
+        buttonContainer.classList.add('camera-button-container');
+
+        const image = document.createElement('img');
+        image.classList.add('camera-thumbnail');
+        image.src = `camera-img/${camera.name.toLowerCase()}.webp`;
+        image.alt = ``;
+
+        image.onerror = function () {
+            image.src = 'img/logo.webp';
+        };
+
+        image.addEventListener('click', () => {
+            button.click();
+        });
+
+        const button = document.createElement('button');
+        button.classList.add('camera-button');
+        button.textContent = camera.name;
+        button.addEventListener('click', () => selectCamera(camera.name));
+
+        buttonContainer.appendChild(image);
+        buttonContainer.appendChild(button);
+        fragment.appendChild(buttonContainer);
     });
-  }
-  
+
+    cameraContainer.appendChild(fragment);
+    // Use the checkbox state to determine visibility and button height
+    updateCameraThumbnailVisibility(thumbnailCameraCheckboxChecked);
+
+}
 
 function selectCamera(cameraName) {
     selectedCamera = cameraName; // Set the selected camera
@@ -1259,12 +1701,14 @@ function selectCamera(cameraName) {
     if (presetPad && presetPad.classList.contains('collapsed')) {
         toggleDirectionPad('.preset-pad');
     }
+    preloadPresetPadImages(cameraName, selectedCameraData.presets); // Preload images
+
     // Populate preset pad with presets for the selected camera
     populatePresetPad(selectedCameraData.presets);
     // Populate preset pad with custom presets for the selected camera
     fetchAndPopulateCustomPresets(cameraName);
     // Adjust layout based on the number of items
-    adjustLayout(); 
+    adjustLayout();
     highlightSelectedCameraButton();
 }
 
@@ -1275,93 +1719,76 @@ function populatePresetPad(presets) {
     const thumbnailCheckboxState = localStorage.getItem('thumbnailVisibility');
     const thumbnailCheckboxChecked = thumbnailCheckboxState === 'true';
 
+    const fragment = document.createDocumentFragment();
+
     presets.forEach(preset => {
-        // Create container for image-button pair
         const container = document.createElement('div');
         container.classList.add('preset-button-container');
 
-        // Create image element
         const image = document.createElement('img');
-
-        image.src = `./button-img/${selectedCamera}/${preset}.png`;
+        image.src = `./button-img/${selectedCamera.toLowerCase()}/${preset}.png`;
         image.classList.add('preset-image');
 
         image.onerror = function () {
-            // Set the source to the home image if the preset image fails to load
-            this.src = `./button-img/${selectedCamera}/home.png`;
-            this.style.backgroundColor = '#222222'; // Replace 'your-color' with the desired color
-            this.style.filter = 'blur(3px)'; // Apply a blur effect
-            // If the home image also fails to load, set a default image source
+            this.src = `./button-img/${selectedCamera.toLowerCase()}/home.png`;
+            this.style.backgroundColor = '#222222';
+            this.style.filter = 'blur(3px)';
             this.onerror = function () {
                 this.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-                this.style.backgroundColor = '#222222'; // Replace 'your-color' with the desired color
-                this.style.borderTopLeftRadius = '15px'; // Adjust the radius for the top-left corner
-                this.style.borderTopRightRadius = '15px'; // Adjust the radius for the top-right corner
+                this.style.backgroundColor = '#222222';
+                this.style.borderTopLeftRadius = '15px';
+                this.style.borderTopRightRadius = '15px';
             };
         };
 
-        // Create button element
         const button = document.createElement('button');
         button.classList.add('preset-button');
         button.textContent = preset;
         button.addEventListener('click', () => sendLoadCommand(selectedCamera, preset));
 
-        // Trigger button click event when image is clicked
-        image.addEventListener('click', () => {
-            // Programmatically trigger the click event on the button
-            button.click();
-        });
+        image.addEventListener('click', () => button.click());
 
-        // Trigger button hover effect when image is hovered over
-        image.addEventListener('mouseover', () => {
-            button.classList.add('preset-button-hover');
-        });
-        image.addEventListener('mouseout', () => {
-            button.classList.remove('preset-button-hover');
-        });
+        image.addEventListener('mouseover', () => button.classList.add('preset-button-hover'));
+        image.addEventListener('mouseout', () => button.classList.remove('preset-button-hover'));
 
-        // Append image and button to container
         container.appendChild(image);
         container.appendChild(button);
-        // Append container to preset pad
-        presetPad.appendChild(container);
-
-        // Update thumbnail visibility and button height based on checkbox state
-        updateThumbnailVisibility(thumbnailCheckboxChecked);
-        updateButtonHeight(thumbnailCheckboxChecked);
+        fragment.appendChild(container);
     });
-}
 
-function fetchAndPopulateCustomPresets(cameraName) {
-    fetchCustomPresets(cameraName)
-        .then(customPresets => {
-            populateCustomPresetPad(customPresets); // Pass filtered custom presets
-            // Retrieve the checkbox state from localStorage
-        })
-        .catch(error => {
-            console.error('Error fetching custom presets:', error);
-        });
-}
+    presetPad.appendChild(fragment);
+    updateThumbnailVisibility(thumbnailCheckboxChecked);
+    updateButtonHeight(thumbnailCheckboxChecked);
 
-function fetchCustomPresets(cameraName) {
-    return fetch(`/custom-presets`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to fetch custom presets');
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Filter custom presets based on the cameraName
-            return data.presets.filter(preset => preset.cameraName === cameraName);
-        })
-        .catch(error => {
-            console.error('Error fetching custom presets:', error);
-            return []; // Return an empty array in case of an error
-        });
 }
 
 
+async function fetchAndPopulateCustomPresets(cameraName) {
+    try {
+        const customPresets = await fetchCustomPresets(cameraName);
+        populateCustomPresetPad(customPresets); // Pass filtered custom presets
+        // Retrieve the checkbox state from localStorage
+    } catch (error) {
+        console.error('Error fetching custom presets:', error);
+    }
+}
+
+async function fetchCustomPresets(cameraName) {
+    try {
+        const response = await fetch(`/custom-presets`);
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch custom presets');
+        }
+
+        const data = await response.json();
+        // Filter custom presets based on the cameraName
+        return data.presets.filter(preset => preset.cameraName === cameraName);
+    } catch (error) {
+        console.error('Error fetching custom presets:', error);
+        return []; // Return an empty array in case of an error
+    }
+}
 function populateCustomPresetPad(customPresets) {
     const customPresetPad = document.getElementById('customPresetPad');
     customPresetPad.innerHTML = ''; // Clear previous custom preset buttons
@@ -1369,56 +1796,50 @@ function populateCustomPresetPad(customPresets) {
     const thumbnailCheckboxState = localStorage.getItem('thumbnailVisibility');
     const thumbnailCheckboxChecked = thumbnailCheckboxState === 'true';
 
+    const fragment = document.createDocumentFragment();
+
     customPresets.forEach(customPreset => {
-        // Create container for image-button pair
         const container = document.createElement('div');
         container.classList.add('custom-preset-button-container');
 
-        // Create image element
         const image = document.createElement('img');
+        image.src = `./button-img/${selectedCamera.toLowerCase()}/${customPreset.presetName}.png`;
+        image.classList.add('custom-preset-image');
 
         image.onerror = function () {
-            // Set the source to the home image if the preset image fails to load
-            this.src = `./button-img/${selectedCamera}/home.png`;
-            this.style.backgroundColor = '#222222'; // Replace 'your-color' with the desired color
-            this.style.filter = 'blur(3px)'; // Apply a blur effect
-            // If the home image also fails to load, set a default image source
+            this.src = `./button-img/${selectedCamera.toLowerCase()}/home.png`;
+            this.style.backgroundColor = '#222222';
+            this.style.filter = 'blur(3px)';
             this.onerror = function () {
                 this.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-                this.style.backgroundColor = '#222222'; // Replace 'your-color' with the desired color
-                this.style.borderTopLeftRadius = '15px'; // Adjust the radius for the top-left corner
-                this.style.borderTopRightRadius = '15px'; // Adjust the radius for the top-right corner
+                this.style.backgroundColor = '#222222';
+                this.style.borderTopLeftRadius = '15px';
+                this.style.borderTopRightRadius = '15px';
             };
         };
 
-        image.src = `./button-img/${selectedCamera}/${customPreset.presetName}.png`;
-        image.classList.add('custom-preset-image');
-
-        // Create button element
         const button = document.createElement('button');
         button.classList.add('custom-preset-button');
-        button.textContent = customPreset.presetName; // Use presetName property as the button label
-        button.addEventListener('click', () => sendCustomCommand(selectedCamera, customPreset.presetName, customPresets)); // Pass presetName to sendCustomCommand
+        button.textContent = customPreset.presetName;
+        button.addEventListener('click', () => sendCustomCommand(selectedCamera, customPreset.presetName, customPresets));
 
-        // Trigger button click event when image is clicked
-        image.addEventListener('click', () => {
-            // Programmatically trigger the click event on the button
-            button.click();
-        });
+        image.addEventListener('click', () => button.click());
 
-        // Append image and button to container
         container.appendChild(image);
         container.appendChild(button);
-
-        // Append container to custom preset pad
-        customPresetPad.appendChild(container);
-
-        // Update thumbnail visibility and button height based on checkbox state
-        updateThumbnailVisibility(thumbnailCheckboxChecked);
-        updateButtonHeight(thumbnailCheckboxChecked);
+        fragment.appendChild(container);
     });
+
+    customPresetPad.appendChild(fragment);
+    updateThumbnailVisibility(thumbnailCheckboxChecked);
+    updateButtonHeight(thumbnailCheckboxChecked);
     toggleCustomPresetContainerVisibility();
+    adjustLayout();
+
 }
+
+
+
 
 function highlightSelectedCameraButton() {
     const buttons = document.querySelectorAll('.camera-button');
@@ -1582,14 +2003,73 @@ function sendCustomCommand(cameraName, presetName, customPresets) {
     sendCommand(setCommand);
 }
 
+
+async function sendCustomDialogCommand(cameraName, presetName) {
+    try {
+        // Fetch the custom preset data
+        const presetData = await findDialogPresetData(cameraName, presetName);
+
+        // Check if presetData is valid
+        if (!presetData) {
+            console.error(`Custom preset '${presetName}' not found.`);
+            return; // Exit the function if presetData is not found
+        }
+
+        // Extract the necessary data from the presetData
+        const { pan, tilt, zoom, autoFocus, focus } = presetData;
+
+        // Check if any of the variables is undefined
+        if (typeof pan === 'undefined' || typeof tilt === 'undefined' || typeof zoom === 'undefined' ||
+            typeof autoFocus === 'undefined' || typeof focus === 'undefined') {
+            console.error('One or more parameters are undefined.');
+            return; // Exit the function if any parameter is undefined
+        }
+
+        // Construct the set command using the extracted data
+        const setCommand = `!ptzseta ${cameraName.toLowerCase()} ${pan} ${tilt} ${zoom} ${autoFocus} ${focus}`;
+
+        // Send the set command to the backend server
+        sendCommand(setCommand);
+
+    } catch (error) {
+        console.error('Error in sending custom dialog command:', error);
+    }
+}
+
+// Update findPresetData to return the preset data
+async function findDialogPresetData(cameraName, presetName) {
+    try {
+        // Fetch data from the endpoint
+        const response = await fetch('/custom-presets');
+        const data = await response.json();
+
+        // Access the 'presets' array from the fetched data
+        const customPresets = data.presets;
+
+        // Find the preset that matches both cameraName and presetName
+        const preset = customPresets.find(preset => preset.cameraName === cameraName && preset.presetName === presetName);
+
+        if (preset) {
+            // Return the extracted data
+            return preset;
+        } else {
+            console.error(`Preset '${presetName}' not found for camera '${cameraName}'.`);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error fetching or parsing custom preset data:', error);
+        return null;
+    }
+}
+
 function sendLoadCommand(camera, preset) {
-    const command = `!ptzload ${camera.toLowerCase()} ${preset}`;  
-    sendCommand(command); 
+    const command = `!ptzload ${camera.toLowerCase()} ${preset}`;
+    sendCommand(command);
 }
 
 function sendDirectionCommand(direction) {
     const command = `!ptzmove ${selectedCamera.toLowerCase()} ${direction}`;
-    sendCommand(command); 
+    sendCommand(command);
 }
 
 function sendPanTiltZoom() {
@@ -1597,7 +2077,7 @@ function sendPanTiltZoom() {
     const tilt = document.getElementById('tiltInput').value || '0';
     const zoom = document.getElementById('zoomPTZInput').value || '0';
     const command = `!ptzset ${selectedCamera.toLowerCase()} ${pan} ${tilt} ${zoom}`;
-    sendCommand(command); 
+    sendCommand(command);
     // Clear the input values
     document.getElementById('panInput').value = '';
     document.getElementById('tiltInput').value = '';
@@ -1607,7 +2087,7 @@ function sendPanTiltZoom() {
 function sendZoom() {
     const zoom = document.getElementById('zoomInput').value || '0';
     const command = `!ptzzoom ${selectedCamera.toLowerCase()} ${zoom}`;
-    sendCommand(command); 
+    sendCommand(command);
 
     // Clear the input values
     document.getElementById('zoomInput').value = '';
@@ -1621,11 +2101,23 @@ function sendpadZoom(action) {
     zoom = parseInt(zoom, 10);
 
     if (action === 'minus') {
-        zoom = -zoom;
+        if (zoom <= 100) {
+            zoomLevel = 100 - zoom;
+        } else {
+            zoomLevel = 0;
+        }
+    }
+    if (action === 'plus') {
+        if (zoom <= 100) {
+            zoomLevel = zoom + 100;
+        } else if (zoom > 100) {
+            zoomLevel = zoom + 100;
+        }
     }
 
-    const command = `!ptzzoom ${selectedCamera.toLowerCase()} ${zoom}`;
-    sendCommand(command); 
+
+    const command = `!ptzareazoom ${selectedCamera.toLowerCase()} 960 540 ${zoomLevel}`;
+    sendCommand(command);
 }
 
 function sendIRcommand(selected) {
@@ -1634,7 +2126,19 @@ function sendIRcommand(selected) {
 }
 
 function sendReset() {
-    const command = `!resetcam ${selectedCamera.toLowerCase()}`;
+    if (selectedCamera.toLowerCase() === "marmin") {
+        cam = "marmosetindoor";
+    } else if (selectedCamera.toLowerCase() === "marmout") {
+        cam = "marmoset";
+    } else if (selectedCamera.toLowerCase() === "crowin") {
+        cam = "crowindoor";
+    } else if (selectedCamera.toLowerCase() === "crowout") {
+        cam = "crow";
+    } else {
+        cam = selectedCamera.toLowerCase();
+    }
+
+    const command = `!resetcam ${cam}`;
     sendCommand(command);
 }
 
@@ -1662,7 +2166,7 @@ function sendSwapCommand() {
     }
 
     const command = `!swap ${swap1.toLowerCase()} ${swap2.toLowerCase()}`;
-    sendCommand(command); 
+    sendCommand(command);
 
     document.getElementById('swap-dropdown1').value = 'option1';
     document.getElementById('swap-dropdown2').value = 'option1';
@@ -1675,7 +2179,7 @@ function sendSwapCommand() {
 function sendFocusCommand() {
     const focus = document.getElementById('focus').value || '';
     const command = `!ptzfocusr ${selectedCamera.toLowerCase()} ${focus}`;
-    sendCommand(command); 
+    sendCommand(command);
 
     // Clear the input values
     document.getElementById('focus').value = '';
@@ -1683,29 +2187,29 @@ function sendFocusCommand() {
 
 function sendAutoFocusCommand() {
     const command = `!ptzautofocus ${selectedCamera.toLowerCase()} on`;
-    sendCommand(command); 
+    sendCommand(command);
 
 }
 
 // Function to send a command to the backend endpoint
-function sendCommand(command) {
-    // Send the command to the backend endpoint
-    return fetch('/send-command', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ command })
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to send command');
-            }
-            console.log('Command sent successfully');
-        })
-        .catch(error => {
-            console.error('Error sending command:', error);
+async function sendCommand(command) {
+    try {
+        const response = await fetch('/send-command', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ command })
         });
+
+        if (!response.ok) {
+            throw new Error('Failed to send command');
+        }
+
+        console.log('Command sent successfully');
+    } catch (error) {
+        console.error('Error sending command:', error);
+    }
 }
 
 function setSwapNumber(number) {
@@ -1782,25 +2286,212 @@ document.getElementById('swap2').addEventListener('input', function () {
     document.getElementById('swap-dropdown2').value = 'option1';
 });
 
+// Arrow key ptzspin
+let panSpeed = 0;
+let tiltSpeed = 0;
+let zoomSpeed = 0;
+let arrowIsPan = 1;
+let arrowIsTilt = 1;
+let arrowIsZoom = 1;
 
+function handlePtzSpin(event) {
+
+    // Check if the target element is an input box or textarea
+    if (event.target.tagName.toLowerCase() === 'input' || event.target.tagName.toLowerCase() === 'textarea') {
+        // Allow default behavior of arrow keys inside input boxes and textareas
+        return;
+    }
+    event.preventDefault(); // Prevent default only for arrow keys outside input boxes and textareas
+
+    if (event.repeat) return; // Ignore repeated events
+
+    switch (event.key) {
+        case 'ArrowLeft':
+            panSpeed = -10; // Start panning left
+            ptzSpin(panSpeed, tiltSpeed, zoomSpeed);
+            arrowIsPan = 2;
+            break;
+        case 'ArrowRight':
+            panSpeed = 10; // Start panning right
+            ptzSpin(panSpeed, tiltSpeed, zoomSpeed);
+            arrowIsPan = 2;
+            break;
+        case 'ArrowUp':
+            tiltSpeed = 10; // Start tilting up
+            ptzSpin(panSpeed, tiltSpeed, zoomSpeed);
+            arrowIsTilt = 2;
+            break;
+        case 'ArrowDown':
+            tiltSpeed = -10; // Start tilting down
+            ptzSpin(panSpeed, tiltSpeed, zoomSpeed);
+            arrowIsTilt = 2;
+            break;
+        case '=':
+            zoomSpeed = 5; // Start zooming in
+            ptzSpin(panSpeed, tiltSpeed, zoomSpeed);
+            arrowIsZoom = 2;
+            break;
+        case '-':
+            zoomSpeed = -5; // Start zooming out
+            ptzSpin(panSpeed, tiltSpeed, zoomSpeed);
+            arrowIsZoom = 2;
+            break;
+        case '1':
+            // Adjust speed to a low setting
+            panSpeed = panSpeed > 0 ? 10 : (panSpeed < 0 ? -10 : panSpeed);
+            tiltSpeed = tiltSpeed > 0 ? 10 : (tiltSpeed < 0 ? -10 : tiltSpeed);
+            zoomSpeed = zoomSpeed > 0 ? 10 : (zoomSpeed < 0 ? -10 : zoomSpeed);
+            arrowIsdown = 2;
+            ptzSpin(panSpeed, tiltSpeed, zoomSpeed);
+            break;
+        case '2':
+            // Adjust speed to a medium setting
+            panSpeed = panSpeed > 0 ? 30 : (panSpeed < 0 ? -30 : panSpeed);
+            tiltSpeed = tiltSpeed > 0 ? 30 : (tiltSpeed < 0 ? -30 : tiltSpeed);
+            zoomSpeed = zoomSpeed > 0 ? 30 : (zoomSpeed < 0 ? -30 : zoomSpeed);
+            arrowIsdown = 2;
+            ptzSpin(panSpeed, tiltSpeed, zoomSpeed);
+            break;
+        case '3':
+            // Adjust speed to a high setting
+            panSpeed = panSpeed > 0 ? 50 : (panSpeed < 0 ? -50 : panSpeed);
+            tiltSpeed = tiltSpeed > 0 ? 50 : (tiltSpeed < 0 ? -50 : tiltSpeed);
+            zoomSpeed = zoomSpeed > 0 ? 50 : (zoomSpeed < 0 ? -50 : zoomSpeed);
+
+            arrowIsdown = 2;
+            ptzSpin(panSpeed, tiltSpeed, zoomSpeed);
+            break;
+        case '4':
+            // Adjust speed to a high setting
+            panSpeed = panSpeed > 0 ? 80 : (panSpeed < 0 ? -80 : panSpeed);
+            tiltSpeed = tiltSpeed > 0 ? 80 : (tiltSpeed < 0 ? -80 : tiltSpeed);
+            zoomSpeed = zoomSpeed > 0 ? 80 : (zoomSpeed < 0 ? -80 : zoomSpeed);
+            arrowIsdown = 2;
+            ptzSpin(panSpeed, tiltSpeed, zoomSpeed);
+            break;
+    }
+}
+function handlePtzSpinStop(event) {
+    const isSpinEnabled = localStorage.getItem('isSpinEnabled') === 'true';
+
+    // Check if event.key is in arrowKeys or plusminusKeys and isSpinEnabled is true
+    if (isSpinEnabled) {
+        // Event listener for keyup
+        switch (event.key) {
+            case 'ArrowLeft':
+            case 'ArrowRight':
+                panSpeed = 0; // Stop panning
+                ptzSpin(panSpeed, tiltSpeed, zoomSpeed);
+                arrowIsPan = 1;
+                break;
+            case 'ArrowUp':
+            case 'ArrowDown':
+                tiltSpeed = 0; // Stop tilting
+                ptzSpin(panSpeed, tiltSpeed, zoomSpeed);
+                arrowIsTilt = 1;
+                break;
+            case '=':
+            case '-':
+                zoomSpeed = 0; // Stop zooming
+                ptzSpin(panSpeed, tiltSpeed, zoomSpeed);
+                arrowIsZoom = 1;
+                break;
+        }
+    }
+}
+
+function handleHotkeyswap(event) {
+    // Define the command to send based on the key pressed
+    let command = '';
+    switch (event.key) {
+        case '2':
+            command = '!swap 1 2';
+            break;
+        case '3':
+            command = '!swap 1 3';
+            break;
+        case '4':
+            command = '!swap 1 4';
+            break;
+        case '5':
+            command = '!swap 1 5';
+            break;
+        case '6':
+            command = '!swap 1 6';
+            break;
+    }
+
+    // Send the command
+    sendCommand(command);
+
+    // Display the command in the commandDisplay element
+    const commandDisplay = document.getElementById('commandDisplay');
+    commandDisplay.textContent = `Swap 1 ${event.key}`;
+
+    // Clear the display after 3 seconds
+    setTimeout(() => {
+        commandDisplay.textContent = '';
+    }, 3000);
+}
+
+function ptzSpin(panSpeed, tiltSpeed, zoomSpeed) {
+    const command = `!ptzspin ${selectedCamera.toLowerCase()} ${panSpeed} ${tiltSpeed} ${zoomSpeed} `;
+    sendCommand(command);
+}
 // handle key down events
+
+// Attach the handleKeyDown function to the keydown event
+document.addEventListener('keydown', handleKeyDown);
+document.addEventListener('keyup', handlePtzSpinStop);
 
 let keysPressed = ''; // Keep track of the keys pressed
 const delay = 1000; // Adjust the delay as needed
 let timeoutId; // Keep track of the setTimeout ID
 
+
 function handleKeyDown(event) {
     // Check if the arrow key checkbox state is stored in local storage
     const savedArrowKeyCheckboxState = localStorage.getItem('arrowKeyCheckboxState');
+    const savedAswapHotkeyCheckboxState = localStorage.getItem('swapHotkeyCheckboxState');
+
     if (savedArrowKeyCheckboxState !== 'true') {
         return; // Exit the function if checkbox is not checked (or if the state is not found in local storage)
     }
 
-    // Handle arrow keys separately
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+    const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+    const numberKeys = ['1', '2', '3', '4'];
+    const plusminusKeys = ['=', '-'];
+    const isSpinEnabled = localStorage.getItem('isSpinEnabled') === 'true';
+    console.log('isSpinEnabled:', isSpinEnabled);
+
+    if ((arrowKeys.includes(event.key) || plusminusKeys.includes(event.key)) && isSpinEnabled) {
+        lastKeyPressed = event.key;
+        handlePtzSpin(event);
+        return;
+    } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
         handleArrowKeys(event);
         return;
+        }
+
+    if (numberKeys.includes(event.key) && (arrowIsPan == 2 || arrowIsTilt == 2 || arrowIsZoom == 2)) {
+        handlePtzSpin(event);
+        return;
     }
+
+    if ((savedAswapHotkeyCheckboxState == 'true') && (event.ctrlKey && event.key >= '2' && event.key <= '6')) {
+        // Ctrl key is held and a number key (2-6) is pressed
+        handleHotkeyswap(event);        
+    }
+
+    // Reset lastKeyPressed if it's not one of the arrow keys or number keys
+    lastKeyPressed = null;
+
+    // Handle arrow keys separately
+    //if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', '1', '2', '3'].includes(event.key)) {
+    //    //handleArrowKeys(event);
+    //    handlePtzSpin(event);
+    //    return;
+    //}
 
     // Handle other keys
     if (event.key === 'Enter') {
@@ -1810,22 +2501,22 @@ function handleKeyDown(event) {
             document.getElementById('presetSearch').focus();
         }
     }
-          // Check if the pressed key is a number (0-9) and no other keys are pressed
-          if (event.key >= '0' && event.key <= '9' && keysPressed === '' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-            // Convert the key to a number
-            const index = parseInt(event.key, 10) - 1; // Convert '1' to 0, '2' to 1, etc.
-            // Get the list of camera buttons
-            const cameraButtons = document.querySelectorAll('.camera-button');
-            // Check if the index is within the range of available buttons
-            if (index >= 0 && index < cameraButtons.length) {
-                // Focus the corresponding button
-                cameraButtons[index].focus();
-                // Optionally, you can trigger a click event if you want the button to be "pressed"
-                cameraButtons[index].click();
-            }
-            return; // Exit the function to prevent hotkey handling
+    // Check if the pressed key is a number (0-9) and no other keys are pressed
+    if (event.key >= '0' && event.key <= '9' && keysPressed === '' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && !event.ctrlKey) {
+        // Convert the key to a number
+        const index = parseInt(event.key, 10) - 1; // Convert '1' to 0, '2' to 1, etc.
+        // Get the list of camera buttons
+        const cameraButtons = document.querySelectorAll('.camera-button');
+        // Check if the index is within the range of available buttons
+        if (index >= 0 && index < cameraButtons.length) {
+            // Focus the corresponding button
+            cameraButtons[index].focus();
+            // Optionally, you can trigger a click event if you want the button to be "pressed"
+            cameraButtons[index].click();
         }
-    
+        return; // Exit the function to prevent hotkey handling
+    }
+
 
     // Check if the target element is an input box or textarea
     if (event.target.tagName.toLowerCase() === 'input' || event.target.tagName.toLowerCase() === 'textarea') {
@@ -1958,8 +2649,6 @@ function handleHotkey(event) {
         });
 }
 
-// Attach the handleKeyDown function to the keydown event
-document.addEventListener('keydown', handleKeyDown);
 
 function executeHotkeyAction(cameraName, preset, isCustom) {
     console.log(`Executing action for camera '${cameraName}' and preset '${preset}'.`);
@@ -2021,32 +2710,36 @@ async function findPresetData(cameraName, presetName) {
     }
 }
 
-function getHotkeys() {
-    return fetch('/hotkeys')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to fetch hotkey data');
-            }
-            return response.json();
-        })
-        .catch(error => {
-            console.error('Error fetching hotkey data:', error);
-            throw error; // Re-throw the error to be caught by the caller
-        });
+async function getHotkeys() {
+    try {
+        const response = await fetch('/hotkeys');
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch hotkey data');
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching hotkey data:', error);
+        throw error; // Re-throw the error to be caught by the caller
+    }
 }
 
-function getCustomHotkeys() {
-    return fetch('/custom-hotkeys')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to fetch hotkey data');
-            }
-            return response.json();
-        })
-        .catch(error => {
-            console.error('Error fetching hotkey data:', error);
-            throw error; // Re-throw the error to be caught by the caller
-        });
+async function getCustomHotkeys() {
+    try {
+        const response = await fetch('/custom-hotkeys');
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch hotkey data');
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching hotkey data:', error);
+        throw error; // Re-throw the error to be caught by the caller
+    }
 }
 
 
@@ -2078,12 +2771,13 @@ function toggleValues() {
     document.getElementById('sliderValueLabel').textContent = values[currentIndex]; // Update the button label with the new value
 }
 
-const zoomValues = ['0', '5', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55', '60', '65', '70', '75', '80', '85', '90', '95', '100', '105'];
+//const zoomValues = ['0', '5', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55', '60', '65', '70', '75', '80', '85', '90', '95', '100', '105'];
+const zoomValues = ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100', '150', '200', '300', '400'];
 let currentZoomIndex = 0;
 
 function updateZoomLabel() {
-    document.getElementById('sliderZoomLabel').textContent = zoomValues[currentZoomIndex];
-}
+        document.getElementById('sliderZoomLabel').textContent = zoomValues[currentZoomIndex] + '%';
+    }
 
 function incrementZoom() {
     if (currentZoomIndex < zoomValues.length - 1) {
@@ -2393,28 +3087,31 @@ function handleMusicUnmute(currentVolume) {
 }
 
 
-// MPV Button to start / stop the websocket
-function startListening(button) {
-    isListening = !isListening; // Toggle the listening state
-    if (isListening) {
-        console.log('Listening Started.');
-        // Generate a unique identifier for the client
-        const clientId = generateClientId();
 
-        // Send a message to the server indicating that the client has started listening,
-        // along with the client's unique identifier
-        socket.send(JSON.stringify({ action: 'startListening', clientId: clientId }));
+window.addEventListener('load', function() {
+    localStorage.setItem('isSpinEnabled', 'false');
 
-        // Add the highlighted class to the button
+    let isSpinEnabled = localStorage.getItem('isSpinEnabled') === 'true';
+    let button = document.getElementById('spinButton');
+    if (isSpinEnabled) {
         button.classList.add('highlighted');
     } else {
-        console.log('Listening stopped.');
-        // Send a message to the server indicating that the client has stopped listening
-        socket.send(JSON.stringify({ action: 'stopListening' }));
-
-        // Remove the highlighted class from the button
         button.classList.remove('highlighted');
     }
+});
+
+function enableSpin(button) {
+    let isSpinEnabled = localStorage.getItem('isSpinEnabled') === 'true';
+    if (!isSpinEnabled) {
+        console.log('Spin Enabled.');
+        localStorage.setItem('isSpinEnabled', 'true');
+        button.classList.add('highlighted');
+    } else {
+        console.log('Spin Disabled.');
+        localStorage.setItem('isSpinEnabled', 'false');
+        button.classList.remove('highlighted');
+    }
+    console.log('New state: ', localStorage.getItem('isSpinEnabled') === 'true' ? 'Enabled' : 'Disabled');
 }
 
 
@@ -2423,167 +3120,56 @@ function generateClientId() {
     return Math.random().toString(36).substr(2, 9); // Generate a random string
 }
 
-// Create a WebSocket connection to the server
-const socket = new WebSocket('ws://localhost:8081');
-let isListening = false;
 
-socket.onopen = () => {
-    console.log('Connected to WebSocket server');
-};
+function sendAreazoomCommand(scaledX, scaledY, zoom, cameraName) {
+    const zoomInput = document.getElementById('zoomInput');
+    const selectedCameraElement = document.querySelector('.camera-container .selected');
+    const defaultCameraName = selectedCameraElement ? selectedCameraElement.textContent.trim().toLowerCase() : '';
 
-socket.onmessage = (event) => {
-    if (isListening) {
-        console.log('Received data from server:', event.data);
-        try {
-            const parsedData = JSON.parse(event.data);
-            console.log('Parsed data:', parsedData);
+    let zoomLevel;
 
-            const clickX = parsedData.clickX;
-            const clickY = parsedData.clickY;
-            const viewportWidth = parsedData.windowWidth;
-            const viewportHeight = parsedData.windowHeight;
-
-            // Call the mpvclick function with the parsed data
-            mpvclick(clickX, clickY, viewportHeight, viewportWidth); // Passing viewportHeight and viewportWidth instead of windowHeight and windowWidth
-        } catch (error) {
-            console.error('Error parsing received data:', error);
-        }
-    }
-};
-
-// Handle connection errors
-socket.onerror = (error) => {
-    console.error('WebSocket error:', error);
-};
-
-function mpvclick(clickX, clickY, viewportHeight, viewportWidth) {
-
-    // Calculate expected 16:9 height and width
-    const expected16x9Height = (9 / 16) * viewportWidth;
-    const expected16x9Width = (16 / 9) * viewportHeight;
-
-    // Determine effective width and height considering black bars
-    let effectiveWidth;
-    let effectiveHeight;
-
-    effectiveHeight = viewportHeight;
-    effectiveWidth = viewportWidth;
-
-    // Calculate horizontal and vertical offsets due to black bars
-    const horizontalOffset = (viewportWidth - effectiveWidth) / 2;
-    const verticalOffset = (viewportHeight - effectiveHeight) / 2;
-
-    console.log(`Horizontal Offset: ${horizontalOffset}, Vertical Offset: ${verticalOffset}`);
-
-    // Define scaling factors relative to 1080p
-    const widthScale = effectiveWidth / 1920;
-    const heightScale = effectiveHeight / 1080;
-
-    console.log(`Width Scale: ${widthScale}, Height Scale: ${heightScale}`);
-
-    // Define box boundaries with correct offsets and scaling
-    const boxBoundaries = [
-        {
-            id: 1,
-            x: horizontalOffset,
-            y: verticalOffset,
-            width: 640 * widthScale,
-            height: 360 * heightScale,
-        },
-        {
-            id: 2,
-            x: horizontalOffset,
-            y: verticalOffset + (360 * heightScale),
-            width: 640 * widthScale,
-            height: 360 * heightScale,
-        },
-        {
-            id: 3,
-            x: horizontalOffset,
-            y: verticalOffset + (720 * heightScale),
-            width: 640 * widthScale,
-            height: 360 * heightScale,
-        },
-        {
-            id: 4,
-            x: horizontalOffset + (640 * widthScale),
-            y: verticalOffset + (720 * heightScale),
-            width: 640 * widthScale,
-            height: 360 * heightScale,
-        },
-        {
-            id: 5,
-            x: horizontalOffset + (1280 * widthScale),
-            y: verticalOffset + (720 * heightScale),
-            width: 640 * widthScale,
-            height: 360 * heightScale,
-        },
-        {
-            id: 6,
-            x: horizontalOffset + (640 * widthScale),
-            y: verticalOffset,
-            width: 1280 * widthScale,
-            height: 720 * heightScale,
-        },
-    ];
-
-    // Log box boundaries for troubleshooting
-    boxBoundaries.forEach((box) => {
-        console.log(`Box ID: ${box.id}, x: ${box.x}, y: ${box.y}, width: ${box.width}, height: ${box.height}`);
-    });
-
-    // Use getBoundingClientRect() to dynamically get the current position of each box
-    const updatedBoxBoundaries = boxBoundaries.map((box) => {
-        return {
-            ...box,
-            x: box.x,
-            y: box.y,
-            width: box.width,
-            height: box.height,
-        };
-    });
-
-    // Log the updated box boundaries
-    updatedBoxBoundaries.forEach((box) => {
-        console.log(`Updated Box ID: ${box.id}, x: ${box.x.toFixed(2)}, y: ${box.y.toFixed(2)}, width: ${box.width.toFixed(2)}, height: ${box.height.toFixed(2)}`);
-    });
-
-    // Find the box containing the click coordinates
-    const clickedBox = updatedBoxBoundaries.find(
-        (box) =>
-            clickX >= box.x &&
-            clickX < box.x + box.width &&
-            clickY >= box.y &&
-            clickY < box.y + box.height
-    );
-
-    if (!clickedBox) {
-        console.error("Click occurred outside defined boxes.");
-        return;
+    if (zoom === null || zoom === undefined) {
+        const inputValue = zoomInput ? zoomInput.value.trim() : '';
+        zoomLevel = inputValue === '' ? 100 : parseInt(inputValue, 10);
+    } else {
+        zoomLevel = parseInt(zoom, 10);
     }
 
-    console.log(`Clicked within box ID: ${clickedBox.id}`);
+    let intX = parseInt(scaledX, 10);
+    let intY = parseInt(scaledY, 10);
 
-    const relX = (clickX - clickedBox.x) / clickedBox.width; // Get relative X position in the box
-    const relY = (clickY - clickedBox.y) / clickedBox.height; // Get relative Y position in the box
+    // Use provided cameraName or default to manually selected cameraName
+    const effectiveCameraName = cameraName || defaultCameraName;
+    const ptzareazoomCommand = `!ptzareazoom ${effectiveCameraName} ${intX} ${intY} ${zoomLevel}`;
+    const ptzcenterCommand = `!ptzcenter ${effectiveCameraName} ${intX} ${intY} ${zoomLevel}`;
 
-    // Scale relative coordinates to a 1920x1080 context
-    const scaledX = relX * 1920; // Scale to 1920px width
-    const scaledY = relY * 1080; // Scale to 1080px height
+    if (scaledX !== undefined && scaledY !== undefined) {
+        sendCommand(ptzareazoomCommand);
+        console.log("Command sent:", ptzareazoomCommand);
 
-    console.log(`Scaled coordinates for 1080p: X=${scaledX}, Y=${scaledY}`);
+        const commandDisplay = document.getElementById('commandDisplay');
+        commandDisplay.textContent = `Click sent for: ${effectiveCameraName}`;
 
-    sendAreazoomCommand(scaledX, scaledY);
+        setTimeout(() => {
+            commandDisplay.textContent = '';
+        }, 3000);
+
+        document.getElementById('zoomInput').value = '';
+        document.getElementById('zoomInput').blur();
+        document.getElementById('zoomSlider').value = 0;
+    } else {
+        console.error("Failed to fetch valid pan, tilt, or zoom values. PTZ command not sent.");
+    }
 }
 
-function sendAreazoomCommand(scaledX, scaledY, zoom) {
-    
+function ssendAreazoomCommand(scaledX, scaledY, zoom) {
+
     const selectedCameraElement = document.querySelector('.camera-container .selected');
     const selectedCameraName = selectedCameraElement ? selectedCameraElement.textContent.trim() : '';
-       
+
     // Get the zoom input
     const zoomInput = document.getElementById('zoomInput');
-    
+
     let zoomLevel;
 
     if (zoom === null || zoom === undefined) {
@@ -2602,24 +3188,24 @@ function sendAreazoomCommand(scaledX, scaledY, zoom) {
     let intX = parseInt(scaledX, 10);
     let intY = parseInt(scaledY, 10);
     // Construct the command to be sent to Twitch chat
-    const ptzareazoomCommand = `!ptzareazoom ${selectedCameraName.toLowerCase()} ${intX} ${intY} ${zoomLevel}`; 
-    const ptzcenterCommand = `!ptzcenter ${selectedCameraName.toLowerCase()} ${intX} ${intY} ${zoomLevel}`; 
+    const ptzareazoomCommand = `!ptzareazoom ${selectedCameraName.toLowerCase()} ${intX} ${intY} ${zoomLevel}`;
+    const ptzcenterCommand = `!ptzcenter ${selectedCameraName.toLowerCase()} ${intX} ${intY} ${zoomLevel}`;
 
     // Only proceed if all required values are defined
     if (scaledX !== undefined && scaledY !== undefined) {
         // Send the command immediately
-        sendCommand(ptzareazoomCommand); 
+        sendCommand(ptzareazoomCommand);
         console.log("Command sent:", ptzareazoomCommand);
-    
+
         // Display message in header bar
         const commandDisplay = document.getElementById('commandDisplay');
         commandDisplay.textContent = `Click sent for: ${selectedCameraName}`;
-    
+
         // Clear the message after 3 seconds
         setTimeout(() => {
             commandDisplay.textContent = '';
         }, 3000); // Clears message after 3 seconds
-    
+
         // Clear zoom input boxes
         document.getElementById('zoomInput').value = '';
         document.getElementById('zoomInput').blur();
@@ -2629,10 +3215,10 @@ function sendAreazoomCommand(scaledX, scaledY, zoom) {
     }
 }
 
-function sendcenterCommand(scaledX, scaledY) {    
+function sendcenterCommand(scaledX, scaledY) {
     const selectedCameraElement = document.querySelector('.camera-container .selected');
     const selectedCameraName = selectedCameraElement ? selectedCameraElement.textContent.trim() : '';
-       
+
     // Get the zoom input
     const zoomInput = document.getElementById('zoomInput');
 
@@ -2643,24 +3229,24 @@ function sendcenterCommand(scaledX, scaledY) {
     let intX = parseInt(scaledX, 10);
     let intY = parseInt(scaledY, 10);
     // Construct the command to be sent to Twitch chat
-    const ptzareazoomCommand = `!ptzareazoom ${selectedCameraName.toLowerCase()} ${intX} ${intY} ${zoomLevel}`; 
-    const ptzcenterCommand = `!ptzcenter ${selectedCameraName.toLowerCase()} ${intX} ${intY} ${zoomLevel}`; 
+    const ptzareazoomCommand = `!ptzareazoom ${selectedCameraName.toLowerCase()} ${intX} ${intY} ${zoomLevel}`;
+    const ptzcenterCommand = `!ptzcenter ${selectedCameraName.toLowerCase()} ${intX} ${intY} ${zoomLevel}`;
 
     // Only proceed if all required values are defined
     if (scaledX !== undefined && scaledY !== undefined) {
         // Send the command immediately
-        sendCommand(ptzcenterCommand); 
+        sendCommand(ptzcenterCommand);
         console.log("Command sent:", ptzcenterCommand);
-    
+
         // Display message in header bar
         const commandDisplay = document.getElementById('commandDisplay');
         commandDisplay.textContent = `Click sent for: ${selectedCameraName}`;
-    
+
         // Clear the message after 3 seconds
         setTimeout(() => {
             commandDisplay.textContent = '';
         }, 3000); // Clears message after 3 seconds
-    
+
         // Clear zoom input boxes
         document.getElementById('zoomInput').value = '';
         document.getElementById('zoomInput').blur();
@@ -2671,6 +3257,47 @@ function sendcenterCommand(scaledX, scaledY) {
 
 }
 
+function sendclickCommand(scaledX, scaledY, zoom) {
+    const selectedCameraElement = document.querySelector('.camera-container .selected');
+    const selectedCameraName = selectedCameraElement ? selectedCameraElement.textContent.trim() : '';
+
+    // Get the zoom input
+    const zoomInput = document.getElementById('zoomInput');
+
+    // Check if zoom parameter is not provided, so use the value from zoomInput
+    const inputValue = zoomInput ? zoomInput.value.trim() : '';
+    const zoomLevel = zoom !== undefined ? zoom : (inputValue === '' ? 100 : parseInt(inputValue, 10));
+
+    let intX = parseInt(scaledX, 10);
+    let intY = parseInt(scaledY, 10);
+
+    // Construct the command to be sent to Twitch chat
+    const ptzareazoomCommand = `!ptzareazoom ${selectedCameraName.toLowerCase()} ${intX} ${intY} ${zoomLevel}`;
+    const ptzclickCommand = `!ptzclick ${intX} ${intY} ${zoomLevel}`;
+
+    // Only proceed if all required values are defined
+    if (scaledX !== undefined && scaledY !== undefined && scaledX > 0 && scaledY > 0) {
+        // Send the command immediately
+        sendCommand(ptzclickCommand);
+        console.log("Command sent:", ptzclickCommand);
+
+        // Display message in header bar
+        const commandDisplay = document.getElementById('commandDisplay');
+        commandDisplay.textContent = `Click sent x: ${intX} y: ${intY} z: ${zoomLevel}`;
+
+        // Clear the message after 3 seconds
+        setTimeout(() => {
+            commandDisplay.textContent = '';
+        }, 3000); // Clears message after 3 seconds
+
+        // Clear zoom input boxes
+        document.getElementById('zoomInput').value = '';
+        document.getElementById('zoomInput').blur();
+        document.getElementById('zoomSlider').value = 0;
+    } else {
+        console.error("Failed to fetch valid pan, tilt, or zoom values. PTZ command not sent.");
+    }
+}
 // Get references to the slider and text input
 const slider = document.getElementById('zoomSlider');
 const zoomInput = document.getElementById('zoomInput');
@@ -2740,11 +3367,11 @@ function updateFilteredResults(query) {
                 console.log('Selected Camera:', selectedCamera); // Log the selected camera
 
                 const image = document.createElement('img');
-                image.src = `./button-img/${selectedCamera}/${presetName}.png`;
+                image.src = `./button-img/${selectedCamera.toLowerCase()}/${presetName}.png`;
                 image.classList.add('preset-image');
 
                 image.onerror = function () {
-                    this.src = `./button-img/${selectedCamera}/home.png`;
+                    this.src = `./button-img/${selectedCamera.toLowerCase()}/home.png`;
                     this.style.backgroundColor = '#222222';
                     this.style.filter = 'blur(3px)';
                     this.onerror = function () {
@@ -2764,7 +3391,7 @@ function updateFilteredResults(query) {
                 button.textContent = presetName;
                 button.addEventListener('click', () => sendLoadCommand(selectedCamera, presetName));
                 image.addEventListener('click', () => {
-                // Programmatically trigger the click event on the button
+                    // Programmatically trigger the click event on the button
                     button.click();
                 });
 
@@ -2772,7 +3399,7 @@ function updateFilteredResults(query) {
                 container.appendChild(button);
                 filteredPad.appendChild(container);
                 uniqueNames.add(presetName);
-                
+
                 updateThumbnailVisibility(thumbnailCheckboxChecked);
                 updateButtonHeight(thumbnailCheckboxChecked);
             } else {
@@ -2869,22 +3496,3 @@ presetSearchInput.addEventListener('blur', function (event) {
     }
 });
 
-// Event listener to handle showing filteredPad when the search input is focused
-presetSearchInput.addEventListener('focus', function () {
-    const parentContainer = presetPad.closest('.list-layout, .grid-layout');
-    const isListLayout = parentContainer && parentContainer.classList.contains('list-layout');
-    const isGridLayout = parentContainer && parentContainer.classList.contains('grid-layout');
-    const query = this.value.trim().toLowerCase();
-    if (query === '') {
-        if (filteredPad) {
-            filteredPad.style.display = 'none';
-        }
-        if (isListLayout) {
-            presetPad.style.display = 'grid';
-        } else if (isGridLayout) {
-            presetPad.style.display = 'flex';
-        }
-    } else {
-        updateFilteredResults(query);
-    }
-});

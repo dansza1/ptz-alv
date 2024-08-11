@@ -531,6 +531,17 @@ body {
     margin-bottom: 5px;
 }
 
+.btn-select-all {
+    background-color: #0056b3;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 20px;
+    margin-bottom: 5px;
+}
+
 .btn-add-preset:hover, .btn-sync-preset:hover,  .btn-add-custom-preset:hover {
     background-color: #0056b3;
 }
