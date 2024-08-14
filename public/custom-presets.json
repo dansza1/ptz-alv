@@ -7,5 +7,32 @@
     "zoom": "1143",
     "autoFocus": "on",
     "focus": "6385"
+  },
+  {
+    "cameraName": "Pasture",
+    "presetName": "dragonfly",
+    "pan": "-41.92",
+    "tilt": "-3.48",
+    "zoom": "10909",
+    "autoFocus": "on",
+    "focus": "6306"
+  },
+  {
+    "cameraName": "Pasture",
+    "presetName": "feederinspect",
+    "pan": "126.79",
+    "tilt": "19.99",
+    "zoom": "1",
+    "autoFocus": "on",
+    "focus": "1407"
+  },
+  {
+    "cameraName": "Pasture",
+    "presetName": "dragonfly2",
+    "pan": "-42.71",
+    "tilt": "-3.36",
+    "zoom": "10909",
+    "autoFocus": "on",
+    "focus": "6313"
   }
 ]
