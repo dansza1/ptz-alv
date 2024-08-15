@@ -34,5 +34,14 @@
     "zoom": "10909",
     "autoFocus": "on",
     "focus": "6313"
+  },
+  {
+    "cameraName": "Pasture",
+    "presetName": "bugpicnic",
+    "pan": "43.06",
+    "tilt": "-31.6",
+    "zoom": "1257",
+    "autoFocus": "on",
+    "focus": "5299"
   }
 ]
