@@ -1,5 +1,14 @@
 {
   "Parrots": {
     "abovedoorzr": "adz"
+  },
+  "Wolf": {
+    "den1tf": "d1tf"
+  },
+  "Pasture": {
+    "dragonfly": "df",
+    "dragonfly2": "df2",
+    "rattemp": "rt",
+    "bugpicnic": "bp"
   }
 }
