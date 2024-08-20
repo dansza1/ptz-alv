@@ -15,6 +15,7 @@ body {
     color: #ffffff; /* White text color */
     margin: 0;
     padding: 0;
+    
 }
  
 .logo {
@@ -29,10 +30,11 @@ body {
 
 .layout-icons {
     position: absolute;
-    top: 20px;
-    right: 40px;
+    top: 18px;
+    right: 10px;
     font-size: 15px;
     cursor: pointer;
+    zoom: 150%;
 }
 
 .layout-icons > *:not(:last-child) {
@@ -48,13 +50,21 @@ body {
 
 .heading-container {
     position: relative; /* Ensure relative positioning for absolute child */
-    background-color: black; /* Change the background color as needed */
+    background-color: #1c1c1c;
     color: #fff; /* Change the text color as needed */
     height: 60px;
     display: flex;
-    box-shadow: 5px 0px 10px rgba(0, 0, 0, 0.3); /* Add shadow on the right side */
-    zoom: 80%;
+    margin-left: 10px;
+    padding-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px 0 rgba(0,0,0,0.45) inset;
+    zoom: 90%;
+    width: 90%;
+    padding-top: 10px;
+    margin-top: 20px;
 }
+
+
 
 .heading-container::before {
     content: "";
@@ -78,11 +88,11 @@ body {
 }
 
 .admin-icon {
-    width: 20px; /* Adjust as needed */
-    height: 20px; /* Adjust as needed */
-    margin-left: 5px; /* Adjust as needed */
+    width: 30px; /* Adjust as needed */
+    height: 30px; /* Adjust as needed */
+    margin-left: 0px; /* Adjust as needed */
     position: relative;
-    top: 4px;
+    top: 1px;
 }
 
 .left-items {
@@ -145,11 +155,10 @@ body {
     pointer-events: auto;
 }
 .video-container {
-    position: relative;
+    position: fixed;
     width: 1180px; /* Full width of the viewport */
     height: 780px; /* Full height of the viewport */
     overflow: hidden; /* Ensure that content does not overflow */
-    padding-left: 60px; /* Adjust padding as needed */
 }
 
 
@@ -164,12 +173,15 @@ body {
 }
 
 .video-active {
-    width: 100%; /* Full width */
+    width: 86.5%; /* Full width */
     height: 100vh; /* Full viewport height */
-    position: relative; /* Relative positioning */
+    position: fixed; /* Relative positioning */
     overflow: visible; /* Adjust as needed */
     z-index: 1; /* Ensure visibility */
+    margin-left: 192px;
 }
+
+
 
 @media (max-width: 600px) {
 
@@ -1705,6 +1717,10 @@ body {
     margin-left: 5px;
 }
 
+#commandDisplay {
+    margin-right: 100px;  /* Push this button to the far right */
+
+}
 .vidbutton3 {
     margin-left: auto;  /* Push this button to the far right */
     margin-right: 10px; /* Adjust this value to move button3 closer to the center */
@@ -1714,7 +1730,12 @@ body {
 
 }
 
-.vidbutton3.highlighted, .vidbutton4.highlighted {
+.vidbutton5 {
+    margin-right: 15px; /* Adjust this value to move button3 closer to the center */
+
+}
+
+.vidbutton3.highlighted, .vidbutton4.highlighted, .vidbutton5.highlighted  {
     background-color: #1565c0; /* Highlight color for button3 */
 }
 
@@ -1840,5 +1861,6 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 }
 
 .left-menu {
+    margin-top: -5px;
     zoom: 80%;
 }

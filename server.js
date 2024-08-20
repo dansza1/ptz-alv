@@ -25,7 +25,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Twitch bot configuration
 const client = new tmi.Client({
     options: {
-        debug: false, // Enable debug logging
+        debug: true, // Enable debug logging
     },
     connection: {
         secure: true,

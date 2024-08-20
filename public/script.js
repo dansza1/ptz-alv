@@ -729,6 +729,14 @@ document.addEventListener('DOMContentLoaded', function () {
             toggleOverlayZIndex();
         });
 
+        const button5 = document.createElement("button");
+        button5.classList.add("vidbutton5");
+        button5.textContent = "Grid";
+        button5.classList.add("highlighted"); // Add a class to indicate highlighted state
+        button5.addEventListener('click', function () {
+            toggleGrid();
+        });
+
         const button4 = document.createElement("button");
         button4.classList.add("vidbutton4");
         button4.textContent = "Click On";
@@ -801,6 +809,8 @@ document.addEventListener('DOMContentLoaded', function () {
         buttonDiv.appendChild(button2);
         buttonDiv.appendChild(button3);
         buttonDiv.appendChild(button4);
+        buttonDiv.appendChild(button5);
+
 
         // Add the iframe and overlays to the video-container
         videoContainer.appendChild(iframe);
@@ -837,6 +847,17 @@ document.addEventListener('DOMContentLoaded', function () {
     listIcon.addEventListener('click', switchToListView);
     vidIcon.addEventListener('click', switchToVidView);
 
+});
+document.addEventListener('DOMContentLoaded', function() {
+    var video = document.querySelector('video');
+    if (video) {
+        video.muted = false; // Try unmuting first
+        video.play().then(() => {
+            video.muted = false; // Force unmute after playback starts
+        }).catch((error) => {
+            console.error("Autoplay prevented:", error);
+        });
+    }
 });
 
 function setupEventListeners() {
@@ -879,6 +900,22 @@ const toggleOverlay = () => {
     setTimeout(() => {
         updateClickButtonLabel();
     }, 0);
+
+};
+
+const toggleGrid = () => {
+    const boxOverlay = document.getElementById('boxoverlay');
+    const button5 = document.querySelector('.vidbutton5'); // Adjust selector as needed
+
+    if (boxOverlay.style.display === 'block') {
+        boxOverlay.style.display = 'none';
+        button5.classList.remove('highlighted');
+
+    } else {
+        boxOverlay.style.display = 'block';
+        button5.classList.add('highlighted');
+
+    }
 
 };
 
@@ -1525,62 +1562,192 @@ function loadclickoverlay() {
         console.log(`Box ID: ${box.id}, x: ${box.x}, y: ${box.y}, width: ${box.width}, height: ${box.height}`);
     });
 
-    // Handle click events to determine corrected x and y
-    clickOverlay.addEventListener("click", async (e) => {
-        const clickX = e.clientX;
-        const clickY = e.clientY;
-        console.log(`Raw click coordinates: X=${clickX}, Y=${clickY}`);
+    let holdTimer;
+const holdThreshold = 300; // Time in milliseconds to detect a "hold"
+const zoomOptions = [0, 10, 20, 40, 50, 60, 70, 80, 90, 150, 200, 300, 400]; // Define your zoom levels here
+let globalScaledX, globalScaledY; // Global variables to store scaled coordinates
 
+// Create zoom dialog element
+const zoomDialog = document.createElement('div');
+zoomDialog.style.position = 'absolute';
+zoomDialog.style.display = 'none';
+zoomDialog.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'; // Semi-transparent black background
+zoomDialog.style.border = '1px solid white';
+zoomDialog.style.padding = '10px';
+zoomDialog.style.zIndex = '1000';
+zoomDialog.style.color = 'white'; // White text color
+zoomDialog.style.borderRadius = '5px'; // Rounded corners
+zoomDialog.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)'; // Shadow for a popup effect
+
+// Add zoom options to the dialog
+zoomOptions.forEach((zoom) => {
+    const zoomOption = document.createElement('div');
+    zoomOption.textContent = `${zoom}`;
+    zoomOption.style.cursor = 'pointer';
+    zoomOption.style.margin = '5px 0';
+    zoomOption.style.padding = '5px';
+    zoomOption.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'; // Slightly lighter background on hover
+    zoomOption.style.borderRadius = '3px';
+
+    zoomOption.addEventListener('mouseover', () => {
+        zoomOption.style.backgroundColor = 'rgba(255, 255, 255, 0.3)'; // Highlight on hover
+    });
+    zoomOption.addEventListener('mouseout', () => {
+        zoomOption.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'; // Revert background color
+    });
+    zoomOption.addEventListener('click', () => {
+        // Hide and remove the dialog
+        closeZoomDialog();
         
-        // Get iframe dimensions and position
+        // Send click command with selected zoom using the stored coordinates
+        sendclickCommand(globalScaledX, globalScaledY, zoom);
+    });
+    zoomDialog.appendChild(zoomOption);
+});
+
+// Function to close the dialog
+function closeZoomDialog() {
+    if (zoomDialog.parentNode) {
+        zoomDialog.style.display = 'none';
+        zoomDialog.parentNode.removeChild(zoomDialog);
+    }
+}
+
+clickOverlay.addEventListener('mousedown', (e) => {
+    // Ignore right-clicks
+    if (e.button === 2) {
+        return;
+    }
+
+    holdTimer = setTimeout(() => {
         const iframeRect = iframe.getBoundingClientRect();
         const iframeWidth = iframeRect.width;
         const iframeHeight = iframeRect.height;
 
-        console.log(`Iframe Rect:`, iframeRect);
+        const relativeX = e.clientX - iframeRect.left;
+        const relativeY = e.clientY - iframeRect.top;
 
-        // Get raw click coordinates relative to the viewport
-        const rawClickX = e.clientX;
-        const rawClickY = e.clientY;
-
-        console.log(`Raw click coordinates: X=${rawClickX}, Y=${rawClickY}`);
-
-        // Calculate click coordinates relative to the iframe
-        const relativeX = rawClickX - iframeRect.left;
-        const relativeY = rawClickY - iframeRect.top;
-
-        console.log(`Relative click coordinates within iframe: X=${relativeX}, Y=${relativeY}`);
-
-        // Define content size with 16:9 aspect ratio
         const contentWidth = 1920;
         const contentHeight = 1080;
         const contentAspectRatio = contentWidth / contentHeight;
 
-        // Calculate effective dimensions of the content area
         let effectiveWidth, effectiveHeight;
 
         if (iframeWidth / iframeHeight > contentAspectRatio) {
-            // Pillarbox (vertical black bars)
             effectiveHeight = iframeHeight;
             effectiveWidth = effectiveHeight * contentAspectRatio;
         } else {
-            // Letterbox (horizontal black bars)
             effectiveWidth = iframeWidth;
             effectiveHeight = effectiveWidth / contentAspectRatio;
         }
 
-        // Calculate offsets
         const horizontalOffset = (iframeWidth - effectiveWidth) / 2;
         const verticalOffset = (iframeHeight - effectiveHeight) / 2;
 
-        console.log(`Effective dimensions: Width=${effectiveWidth}, Height=${effectiveHeight}`);
-        console.log(`Offsets: Horizontal=${horizontalOffset}, Vertical=${verticalOffset}`);
+        globalScaledX = (relativeX - horizontalOffset) / effectiveWidth * contentWidth;
+        globalScaledY = (relativeY - verticalOffset) / effectiveHeight * contentHeight;
 
-        // Calculate coordinates within the content area
-        const scledX = (relativeX - horizontalOffset) / effectiveWidth * contentWidth;
-        const scledY = (relativeY - verticalOffset) / effectiveHeight * contentHeight;
+        // Ensure the dialog is appended to clickOverlay
+        if (zoomDialog.parentNode !== clickOverlay) {
+            // Remove from document body if necessary
+            if (zoomDialog.parentNode === document.body) {
+                try {
+                    document.body.removeChild(zoomDialog);
+                } catch (error) {
+                    console.error("Error removing dialog from body:", error);
+                }
+            }
+            // Append to clickOverlay
+            clickOverlay.appendChild(zoomDialog);
+        }
 
-        // Check if the click is within any of the box boundaries
+        // Ensure dialog is displayed and positioned
+        zoomDialog.style.display = 'block'; // Ensure visibility
+
+        // Measure dialog size after it is displayed
+        const dialogWidth = zoomDialog.offsetWidth;
+        const dialogHeight = zoomDialog.offsetHeight;
+
+        // Get bounding rectangle of clickOverlay
+        const clickOverlayRect = clickOverlay.getBoundingClientRect();
+
+        // Calculate initial position for zoomDialog
+        let left = e.clientX - clickOverlayRect.left;
+        let top = e.clientY - clickOverlayRect.top;
+
+        // Adjust position to ensure the dialog fits within the boundaries of clickOverlay
+        if (left < 0) {
+            left = 0;
+        }
+        if (top < 0) {
+            top = 0;
+        }
+        if (left + dialogWidth > clickOverlayRect.width) {
+            left = clickOverlayRect.width - dialogWidth;
+        }
+        if (top + dialogHeight > clickOverlayRect.height) {
+            top = clickOverlayRect.height - dialogHeight;
+        }
+
+        // Apply a 10% margin to the top position
+        top -= 0.1 * dialogHeight;
+
+        // Ensure the dialog does not exceed the top edge
+        if (top < 0) {
+            top = 0;
+        }
+
+        // Set the final position
+        zoomDialog.style.left = `${left}px`;
+        zoomDialog.style.top = `${top}px`;
+
+        console.log('Final Position:', { left, top });
+    }, holdThreshold);
+});
+
+clickOverlay.addEventListener('mouseup', (e) => {
+    // Ignore right-clicks
+    if (e.button === 2) {
+        return;
+    }
+
+    clearTimeout(holdTimer);
+    if (zoomDialog.style.display !== 'block') {
+        // Handle normal click
+        const clickX = e.clientX;
+        const clickY = e.clientY;
+        console.log(`Raw click coordinates: X=${clickX}, Y=${clickY}`);
+
+        const iframeRect = iframe.getBoundingClientRect();
+        const iframeWidth = iframeRect.width;
+        const iframeHeight = iframeRect.height;
+
+        const rawClickX = e.clientX;
+        const rawClickY = e.clientY;
+
+        const relativeX = rawClickX - iframeRect.left;
+        const relativeY = rawClickY - iframeRect.top;
+
+        const contentWidth = 1920;
+        const contentHeight = 1080;
+        const contentAspectRatio = contentWidth / contentHeight;
+
+        let effectiveWidth, effectiveHeight;
+
+        if (iframeWidth / iframeHeight > contentAspectRatio) {
+            effectiveHeight = iframeHeight;
+            effectiveWidth = effectiveHeight * contentAspectRatio;
+        } else {
+            effectiveWidth = iframeWidth;
+            effectiveHeight = effectiveWidth / contentAspectRatio;
+        }
+
+        const horizontalOffset = (iframeWidth - effectiveWidth) / 2;
+        const verticalOffset = (iframeHeight - effectiveHeight) / 2;
+
+        const scaledX = (relativeX - horizontalOffset) / effectiveWidth * contentWidth;
+        const scaledY = (relativeY - verticalOffset) / effectiveHeight * contentHeight;
+
         let isWithinBox = false;
         for (const box of boxBoundaries) {
             if (
@@ -1595,13 +1762,243 @@ function loadclickoverlay() {
         }
 
         if (isWithinBox) {
-            sendclickCommand(scledX, scledY);
+            sendclickCommand(scaledX, scaledY);
         } else {
             console.log("Click is outside the box boundaries.");
         }
+    }
+});
 
+clickOverlay.addEventListener('mouseleave', () => {
+    clearTimeout(holdTimer);
+});
+
+// Add keydown event listener for the Esc key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && zoomDialog.style.display === 'block') {
+        closeZoomDialog();
+    }
+});
+}
+
+
+function loadcliczoomkoverlay() {
+    const clickOverlay = document.getElementById("clickoverlay");
+    if (!clickOverlay) {
+        console.error("Click-overlay element not found.");
+        return;
+    }
+
+    const iframe = document.getElementById("twitchIframe");
+
+    const viewportWidth = iframe.clientWidth;
+    const viewportHeight = iframe.clientHeight;
+
+    const expected16x9Height = (9 / 16) * viewportWidth;
+    const expected16x9Width = (16 / 9) * viewportHeight;
+
+    let effectiveWidth, effectiveHeight;
+
+    if (expected16x9Height > viewportHeight) {
+        effectiveHeight = viewportHeight;
+        effectiveWidth = expected16x9Width;
+    } else {
+        effectiveWidth = viewportWidth;
+        effectiveHeight = expected16x9Height;
+    }
+
+    const horizontalOffset = (viewportWidth - effectiveWidth) / 2;
+    const verticalOffset = (viewportHeight - effectiveHeight) / 2;
+
+    const widthScale = effectiveWidth / 1920;
+    const heightScale = effectiveHeight / 1080;
+
+    const boxBoundaries = [
+        {
+            id: 1,
+            x: horizontalOffset,
+            y: verticalOffset,
+            width: 640 * widthScale,
+            height: 360 * heightScale,
+        },
+        {
+            id: 2,
+            x: horizontalOffset,
+            y: verticalOffset + (360 * heightScale),
+            width: 640 * widthScale,
+            height: 360 * heightScale,
+        },
+        {
+            id: 3,
+            x: horizontalOffset,
+            y: verticalOffset + (720 * heightScale),
+            width: 640 * widthScale,
+            height: 360 * heightScale,
+        },
+        {
+            id: 4,
+            x: horizontalOffset + (640 * widthScale),
+            y: verticalOffset + (720 * heightScale),
+            width: 640 * widthScale,
+            height: 360 * heightScale,
+        },
+        {
+            id: 5,
+            x: horizontalOffset + (1280 * widthScale),
+            y: verticalOffset + (720 * heightScale),
+            width: 640 * widthScale,
+            height: 360 * heightScale,
+        },
+        {
+            id: 6,
+            x: horizontalOffset + (640 * widthScale),
+            y: verticalOffset,
+            width: 1280 * widthScale,
+            height: 720 * heightScale,
+        },
+    ];
+
+    let holdTimer;
+    const holdThreshold = 300; // Time in milliseconds to detect a "hold"
+    let isHold = false;
+
+    clickOverlay.addEventListener('mousedown', (e) => {
+        if (e.button === 2) {
+            return; // Ignore right-clicks
+        }
+
+        holdTimer = setTimeout(() => {
+            isHold = true;
+
+            const rawClickX = e.clientX;
+            const rawClickY = e.clientY;
+
+            const iframeRect = iframe.getBoundingClientRect();
+            const relativeX = rawClickX - iframeRect.left;
+            const relativeY = rawClickY - iframeRect.top;
+
+            const contentWidth = 1920;
+            const contentHeight = 1080;
+            const contentAspectRatio = contentWidth / contentHeight;
+
+            let effectiveWidth, effectiveHeight;
+
+            if (iframeRect.width / iframeRect.height > contentAspectRatio) {
+                effectiveHeight = iframeRect.height;
+                effectiveWidth = effectiveHeight * contentAspectRatio;
+            } else {
+                effectiveWidth = iframeRect.width;
+                effectiveHeight = effectiveWidth / contentAspectRatio;
+            }
+
+            const horizontalOffset = (iframeRect.width - effectiveWidth) / 2;
+            const verticalOffset = (iframeRect.height - effectiveHeight) / 2;
+
+            const scaledX = (relativeX - horizontalOffset) / effectiveWidth * contentWidth;
+            const scaledY = (relativeY - verticalOffset) / effectiveHeight * contentHeight;
+
+            let isWithinBox = false;
+            for (const box of boxBoundaries) {
+                if (
+                    relativeX >= box.x &&
+                    relativeX <= box.x + box.width &&
+                    relativeY >= box.y &&
+                    relativeY <= box.y + box.height
+                ) {
+                    isWithinBox = true;
+                    break;
+                }
+            }
+
+            if (isWithinBox) {
+                sendclickCommand(scaledX, scaledY);
+
+                spinTimer = setTimeout(() => {
+                    ptzSpin(0, 0, 50); // Start PTZ spin
+                }, 1500); // 1-second delay
+            } else {
+                console.log("Click is outside the box boundaries.");
+            }
+        }, holdThreshold);
+    });
+
+    clickOverlay.addEventListener('mouseup', (e) => {
+        if (e.button === 2) {
+            return; // Ignore right-clicks
+        }
+
+        clearTimeout(holdTimer);
+
+        if (!isHold) {
+            // Normal click action
+            const rawClickX = e.clientX;
+            const rawClickY = e.clientY;
+
+            const iframeRect = iframe.getBoundingClientRect();
+            const relativeX = rawClickX - iframeRect.left;
+            const relativeY = rawClickY - iframeRect.top;
+
+            const contentWidth = 1920;
+            const contentHeight = 1080;
+            const contentAspectRatio = contentWidth / contentHeight;
+
+            let effectiveWidth, effectiveHeight;
+
+            if (iframeRect.width / iframeRect.height > contentAspectRatio) {
+                effectiveHeight = iframeRect.height;
+                effectiveWidth = effectiveHeight * contentAspectRatio;
+            } else {
+                effectiveWidth = iframeRect.width;
+                effectiveHeight = effectiveWidth / contentAspectRatio;
+            }
+
+            const horizontalOffset = (iframeRect.width - effectiveWidth) / 2;
+            const verticalOffset = (iframeRect.height - effectiveHeight) / 2;
+
+            const scaledX = (relativeX - horizontalOffset) / effectiveWidth * contentWidth;
+            const scaledY = (relativeY - verticalOffset) / effectiveHeight * contentHeight;
+
+            let isWithinBox = false;
+            for (const box of boxBoundaries) {
+                if (
+                    relativeX >= box.x &&
+                    relativeX <= box.x + box.width &&
+                    relativeY >= box.y &&
+                    relativeY <= box.y + box.height
+                ) {
+                    isWithinBox = true;
+                    break;
+                }
+            }
+
+            if (isWithinBox) {
+                sendclickCommand(scaledX, scaledY);
+            } else {
+                console.log("Click is outside the box boundaries.");
+            }
+        } else {
+            // If it was a hold, stop the spin
+            ptzSpin(0, 0, 0);
+        }
+
+        isHold = false;
+    });
+
+    clickOverlay.addEventListener('mouseleave', () => {
+        clearTimeout(holdTimer);
+        if (isHold) {
+            ptzSpin(0, 0, 0); // Stop the ptzSpin when the mouse leaves the overlay
+        }
+        isHold = false;
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            ptzSpin(0, 0, 0);
+        }
     });
 }
+
 
 function preloadImages(cameras) {
     cameras.forEach(camera => {
@@ -1978,9 +2375,9 @@ function sendptzpadCommand(direction) {
 
 function sendCustomCommand(cameraName, presetName, customPresets) {
     // Find the custom preset data based on the preset name
-    const customPreset = customPresets.find(preset => preset.presetName === presetName);
-
-    // Check if the custom preset is found
+    const customPreset = customPresets.find(preset => 
+        preset.cameraName === cameraName && preset.presetName === presetName
+    );    // Check if the custom preset is found
     if (!customPreset) {
         console.error(`Custom preset '${presetName}' not found.`);
         return; // Exit the function if preset not found
@@ -1988,6 +2385,7 @@ function sendCustomCommand(cameraName, presetName, customPresets) {
 
     // Extract the necessary data from the custom preset
     const { cameraName: presetCameraName, pan, tilt, zoom, autoFocus, focus } = customPreset;
+    console.log("sendCustomCommand cameraname", presetCameraName);
 
     // Check if any of the variables is undefined
     if (typeof pan === 'undefined' || typeof tilt === 'undefined' || typeof zoom === 'undefined' ||
@@ -2286,6 +2684,225 @@ document.getElementById('swap2').addEventListener('input', function () {
     document.getElementById('swap-dropdown2').value = 'option1';
 });
 
+
+// Define thresholds for direction detection
+const THRESHOLD = 0.5; // Adjust this value based on your requirements
+
+// Define speeds for each direction
+const SPEEDS = {
+    'slow': 10,
+    'medium': 30,
+    'fast': 80
+};
+
+// Define zoom speeds
+const ZOOM_SPEEDS = [10, 20, 30]; // Array of different zoom speeds
+let defaultZoomSpeedIndex = 1; // Default zoom speed index (middle)
+let currentZoomSpeedIndex = defaultZoomSpeedIndex; // Current zoom speed index
+
+// Default speed level
+let currentSpeed = 'slow';
+
+// Track last sent command
+let lastCommand = { pan: 0, tilt: 0, zoom: 0 };
+
+// Track bumper states
+let rightBumperPressed = false;
+let leftBumperPressed = false;
+
+// Track trigger states
+let rightTriggerPressed = false;
+let leftTriggerPressed = false;
+
+// Event listener for gamepad connection
+window.addEventListener("gamepadconnected", function (e) {
+    console.log("Gamepad connected:", e.gamepad);
+    requestAnimationFrame(updateGamepadStatus);
+});
+
+// Function to update gamepad status
+function updateGamepadStatus() {
+    const gamepads = navigator.getGamepads();
+    let isMoving = false;
+
+    for (let i = 0; i < gamepads.length; i++) {
+        const gamepad = gamepads[i];
+        if (gamepad) {
+            // Get analog stick values
+            const stickX = gamepad.axes[0]; // X axis
+            const stickY = gamepad.axes[1]; // Y axis
+
+            // Get button values
+            const rightTrigger = gamepad.buttons[7].value; // Right trigger (assuming index 7)
+            const leftTrigger = gamepad.buttons[6].value; // Left trigger (assuming index 6)
+            const rightBumper = gamepad.buttons[5].value; // Right bumper (assuming index 5)
+            const leftBumper = gamepad.buttons[4].value; // Left bumper (assuming index 4)
+
+            let pan = 0;
+            let tilt = 0;
+            let zoom = 0;
+
+            // Determine direction based on stick values
+            if (Math.abs(stickX) > THRESHOLD || Math.abs(stickY) > THRESHOLD) {
+                isMoving = true;
+
+                if (Math.abs(stickX) > THRESHOLD && Math.abs(stickY) > THRESHOLD) {
+                    // Diagonals
+                    if (stickX < -THRESHOLD && stickY < -THRESHOLD) { // Up-Left
+                        pan = -SPEEDS[currentSpeed];
+                        tilt = SPEEDS[currentSpeed];
+                    } else if (stickX > THRESHOLD && stickY < -THRESHOLD) { // Up-Right
+                        pan = SPEEDS[currentSpeed];
+                        tilt = SPEEDS[currentSpeed];
+                    } else if (stickX < -THRESHOLD && stickY > THRESHOLD) { // Down-Left
+                        pan = -SPEEDS[currentSpeed];
+                        tilt = -SPEEDS[currentSpeed];
+                    } else if (stickX > THRESHOLD && stickY > THRESHOLD) { // Down-Right
+                        pan = SPEEDS[currentSpeed];
+                        tilt = -SPEEDS[currentSpeed];
+                    }
+                } else {
+                    // Cardinal directions
+                    if (stickY < -THRESHOLD) { // Up
+                        tilt = SPEEDS[currentSpeed];
+                    } else if (stickY > THRESHOLD) { // Down
+                        tilt = -SPEEDS[currentSpeed];
+                    }
+
+                    if (stickX < -THRESHOLD) { // Left
+                        pan = -SPEEDS[currentSpeed];
+                    } else if (stickX > THRESHOLD) { // Right
+                        pan = SPEEDS[currentSpeed];
+                    }
+                }
+            }
+
+            // Handle zoom based on triggers
+            if (rightTrigger > 0) {
+                if (!rightTriggerPressed) {
+                    zoom = ZOOM_SPEEDS[currentZoomSpeedIndex]; // Zoom in
+                    rightTriggerPressed = true;
+                    ptzSpin(pan, tilt, zoom); // Send command immediately
+                    console.log("Zoom in");
+                }
+
+                // Handle bumper input for adjusting zoom speed while the trigger is held down
+                if (rightBumper > 0) {
+                    if (!rightBumperPressed) {
+                        if (currentZoomSpeedIndex < ZOOM_SPEEDS.length - 1) {
+                            currentZoomSpeedIndex++;
+                            zoom = ZOOM_SPEEDS[currentZoomSpeedIndex]; // Apply new zoom speed
+                            ptzSpin(pan, tilt, zoom); // Send command immediately
+                            console.log(`Zoom speed increased: 0 0 ${zoom}`);
+                        }
+                        rightBumperPressed = true;
+                    }
+                } else {
+                    rightBumperPressed = false;
+                }
+
+                if (leftBumper > 0) {
+                    if (!leftBumperPressed) {
+                        if (currentZoomSpeedIndex > 0) {
+                            currentZoomSpeedIndex--;
+                            zoom = ZOOM_SPEEDS[currentZoomSpeedIndex]; // Apply new zoom speed
+                            ptzSpin(pan, tilt, zoom); // Send command immediately
+                            console.log(`Zoom speed decreased: 0 0 ${zoom}`);
+                        }
+                        leftBumperPressed = true;
+                    }
+                } else {
+                    leftBumperPressed = false;
+                }
+            } else {
+                if (rightTriggerPressed) {
+                    zoom = 0; // Stop zooming
+                    rightTriggerPressed = false;
+                    ptzSpin(pan, tilt, zoom); // Send stop command immediately
+                    console.log("Zoom stop");
+
+                    // Reset zoom speed to default
+                    currentZoomSpeedIndex = defaultZoomSpeedIndex;
+                }
+            }
+
+            if (leftTrigger > 0) {
+                if (!leftTriggerPressed) {
+                    zoom = -ZOOM_SPEEDS[currentZoomSpeedIndex]; // Zoom out
+                    leftTriggerPressed = true;
+                    ptzSpin(pan, tilt, zoom); // Send command immediately
+                    console.log("Zoom out");
+                }
+
+                // Handle bumper input for adjusting zoom speed while the trigger is held down
+                if (rightBumper > 0) {
+                    if (!rightBumperPressed) {
+                        if (currentZoomSpeedIndex < ZOOM_SPEEDS.length - 1) {
+                            currentZoomSpeedIndex++;
+                            zoom = -ZOOM_SPEEDS[currentZoomSpeedIndex]; // Apply new zoom speed
+                            ptzSpin(pan, tilt, zoom); // Send command immediately
+                            console.log(`Zoom speed increased: 0 0 ${zoom}`);
+                        }
+                        rightBumperPressed = true;
+                    }
+                } else {
+                    rightBumperPressed = false;
+                }
+
+                if (leftBumper > 0) {
+                    if (!leftBumperPressed) {
+                        if (currentZoomSpeedIndex > 0) {
+                            currentZoomSpeedIndex--;
+                            zoom = -ZOOM_SPEEDS[currentZoomSpeedIndex]; // Apply new zoom speed
+                            ptzSpin(pan, tilt, zoom); // Send command immediately
+                            console.log(`Zoom speed decreased: 0 0 ${zoom}`);
+                        }
+                        leftBumperPressed = true;
+                    }
+                } else {
+                    leftBumperPressed = false;
+                }
+            } else {
+                if (leftTriggerPressed) {
+                    zoom = 0; // Stop zooming
+                    leftTriggerPressed = false;
+                    ptzSpin(pan, tilt, zoom); // Send stop command immediately
+                    console.log("Zoom stop");
+
+                    // Reset zoom speed to default
+                    currentZoomSpeedIndex = defaultZoomSpeedIndex;
+                }
+            }
+
+            // Send movement commands if there is a change
+            if (pan !== lastCommand.pan || tilt !== lastCommand.tilt) {
+                if (pan !== 0 || tilt !== 0) {
+                    // Send the new movement command
+                    ptzSpin(pan, tilt, zoom);
+                    console.log(`Sending command: !ptzspin marmin ${pan} ${tilt} ${zoom}`);
+
+                    // Update last command
+                    lastCommand = { pan, tilt, zoom };
+                }
+            }
+        }
+    }
+
+    // Send stop command if not moving and no zoom command is active
+    if (!isMoving && (lastCommand.pan !== 0 || lastCommand.tilt !== 0 || lastCommand.zoom !== 0)) {
+        // Send stop command immediately
+        ptzSpin(0, 0, 0);
+        console.log("Sent stop command: !ptzspin marmin 0 0 0");
+
+        // Reset last command to stop state
+        lastCommand = { pan: 0, tilt: 0, zoom: 0 };
+    }
+
+    // Use a small timeout to prevent overloading the system with rapid updates
+    setTimeout(() => requestAnimationFrame(updateGamepadStatus), 100);
+}
+
+
 // Arrow key ptzspin
 let panSpeed = 0;
 let tiltSpeed = 0;
@@ -2371,6 +2988,7 @@ function handlePtzSpin(event) {
             break;
     }
 }
+
 function handlePtzSpinStop(event) {
     const isSpinEnabled = localStorage.getItem('isSpinEnabled') === 'true';
 
@@ -2402,6 +3020,8 @@ function handlePtzSpinStop(event) {
 
 function handleHotkeyswap(event) {
     // Define the command to send based on the key pressed
+    if (event.repeat) return;
+
     let command = '';
     switch (event.key) {
         case '2':
@@ -2425,13 +3045,13 @@ function handleHotkeyswap(event) {
     sendCommand(command);
 
     // Display the command in the commandDisplay element
-    const commandDisplay = document.getElementById('commandDisplay');
-    commandDisplay.textContent = `Swap 1 ${event.key}`;
+    //const commandDisplay = document.getElementById('commandDisplay');
+    //commandDisplay.textContent = `Swap 1 ${event.key}`;
 
     // Clear the display after 3 seconds
-    setTimeout(() => {
-        commandDisplay.textContent = '';
-    }, 3000);
+    //setTimeout(() => {
+    //    commandDisplay.textContent = '';
+    //}, 3000);
 }
 
 function ptzSpin(panSpeed, tiltSpeed, zoomSpeed) {
@@ -2486,13 +3106,6 @@ function handleKeyDown(event) {
     // Reset lastKeyPressed if it's not one of the arrow keys or number keys
     lastKeyPressed = null;
 
-    // Handle arrow keys separately
-    //if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', '1', '2', '3'].includes(event.key)) {
-    //    //handleArrowKeys(event);
-    //    handlePtzSpin(event);
-    //    return;
-    //}
-
     // Handle other keys
     if (event.key === 'Enter') {
         // Check if no input element is currently focused
@@ -2502,7 +3115,7 @@ function handleKeyDown(event) {
         }
     }
     // Check if the pressed key is a number (0-9) and no other keys are pressed
-    if (event.key >= '0' && event.key <= '9' && keysPressed === '' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && !event.ctrlKey) {
+    if (event.key >= '0' && event.key <= '9' && keysPressed === '' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && !event.ctrlKey && !isSpinEnabled) {
         // Convert the key to a number
         const index = parseInt(event.key, 10) - 1; // Convert '1' to 0, '2' to 1, etc.
         // Get the list of camera buttons
@@ -2540,6 +3153,7 @@ function handleArrowKeys(event) {
         return;
     }
     event.preventDefault(); // Prevent default only for arrow keys outside input boxes and textareas
+    if (event.repeat) return;
 
     // Execute sendDirectionCommand based on the pressed arrow key
     switch (event.key) {
@@ -2563,6 +3177,7 @@ function handleArrowKeys(event) {
 function handleHotkey(event) {
     // Clear any existing timeout
     clearTimeout(timeoutId);
+    if (event.repeat) return;
 
     // Retrieve normal and custom hotkey data from the server
     Promise.all([getHotkeys(), getCustomHotkeys()])
@@ -2657,11 +3272,11 @@ function executeHotkeyAction(cameraName, preset, isCustom) {
     } else {
         sendLoadCommand(cameraName, preset);
     }
-    const commandDisplay = document.getElementById('commandDisplay');
-    commandDisplay.textContent = `(${keysPressed}) - load ${cameraName} ${preset}`;
-    setTimeout(() => {
-        commandDisplay.textContent = '';
-    }, 3000);
+    //const commandDisplay = document.getElementById('commandDisplay');
+    //commandDisplay.textContent = `(${keysPressed}) - load ${cameraName} ${preset}`;
+    //setTimeout(() => {
+    //    commandDisplay.textContent = '';
+    //}, 3000);
 }
 
 function executeHotkeyAction(cameraName, preset, isCustom) {
@@ -2671,11 +3286,11 @@ function executeHotkeyAction(cameraName, preset, isCustom) {
     } else {
         sendLoadCommand(cameraName, preset);
     }
-    const commandDisplay = document.getElementById('commandDisplay');
-    commandDisplay.textContent = `(${keysPressed}) - load ${cameraName} ${preset}`;
-    setTimeout(() => {
-        commandDisplay.textContent = '';
-    }, 3000);
+    //const commandDisplay = document.getElementById('commandDisplay');
+    //commandDisplay.textContent = `(${keysPressed}) - load ${cameraName} ${preset}`;
+    //setTimeout(() => {
+    //    commandDisplay.textContent = '';
+    //}, 3000);
 }
 
 // Attach the handleHotkey function to the keypress event
@@ -2686,7 +3301,7 @@ async function findPresetData(cameraName, presetName) {
         // Fetch data from the endpoint
         const response = await fetch('/custom-presets');
         const data = await response.json();
-
+        console.log("CameraName CHECKKK:", cameraName);
         // Access the 'presets' array from the fetched data
         const customPresets = data.presets;
 
@@ -3147,12 +3762,12 @@ function sendAreazoomCommand(scaledX, scaledY, zoom, cameraName) {
         sendCommand(ptzareazoomCommand);
         console.log("Command sent:", ptzareazoomCommand);
 
-        const commandDisplay = document.getElementById('commandDisplay');
-        commandDisplay.textContent = `Click sent for: ${effectiveCameraName}`;
+      //  const commandDisplay = document.getElementById('commandDisplay');
+       // commandDisplay.textContent = `Click sent for: ${effectiveCameraName}`;
 
-        setTimeout(() => {
-            commandDisplay.textContent = '';
-        }, 3000);
+       // setTimeout(() => {
+       //     commandDisplay.textContent = '';
+       // }, 3000);
 
         document.getElementById('zoomInput').value = '';
         document.getElementById('zoomInput').blur();
@@ -3198,13 +3813,13 @@ function ssendAreazoomCommand(scaledX, scaledY, zoom) {
         console.log("Command sent:", ptzareazoomCommand);
 
         // Display message in header bar
-        const commandDisplay = document.getElementById('commandDisplay');
-        commandDisplay.textContent = `Click sent for: ${selectedCameraName}`;
+     //   const commandDisplay = document.getElementById('commandDisplay');
+      //  commandDisplay.textContent = `Click sent for: ${selectedCameraName}`;
 
         // Clear the message after 3 seconds
-        setTimeout(() => {
-            commandDisplay.textContent = '';
-        }, 3000); // Clears message after 3 seconds
+     //   setTimeout(() => {
+     //       commandDisplay.textContent = '';
+     //   }, 3000); // Clears message after 3 seconds
 
         // Clear zoom input boxes
         document.getElementById('zoomInput').value = '';
@@ -3239,13 +3854,13 @@ function sendcenterCommand(scaledX, scaledY) {
         console.log("Command sent:", ptzcenterCommand);
 
         // Display message in header bar
-        const commandDisplay = document.getElementById('commandDisplay');
-        commandDisplay.textContent = `Click sent for: ${selectedCameraName}`;
+    //    const commandDisplay = document.getElementById('commandDisplay');
+     //   commandDisplay.textContent = `Click sent for: ${selectedCameraName}`;
 
         // Clear the message after 3 seconds
-        setTimeout(() => {
-            commandDisplay.textContent = '';
-        }, 3000); // Clears message after 3 seconds
+      //  setTimeout(() => {
+     //       commandDisplay.textContent = '';
+    //    }, 3000); // Clears message after 3 seconds
 
         // Clear zoom input boxes
         document.getElementById('zoomInput').value = '';
@@ -3282,13 +3897,13 @@ function sendclickCommand(scaledX, scaledY, zoom) {
         console.log("Command sent:", ptzclickCommand);
 
         // Display message in header bar
-        const commandDisplay = document.getElementById('commandDisplay');
-        commandDisplay.textContent = `Click sent x: ${intX} y: ${intY} z: ${zoomLevel}`;
+        //const commandDisplay = document.getElementById('commandDisplay');
+        //commandDisplay.textContent = `Click sent x: ${intX} y: ${intY} z: ${zoomLevel}`;
 
         // Clear the message after 3 seconds
-        setTimeout(() => {
-            commandDisplay.textContent = '';
-        }, 3000); // Clears message after 3 seconds
+       // setTimeout(() => {
+        //    commandDisplay.textContent = '';
+        //}, 3000); // Clears message after 3 seconds
 
         // Clear zoom input boxes
         document.getElementById('zoomInput').value = '';

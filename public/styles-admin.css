@@ -5,7 +5,7 @@ body {
     margin: 0;
     padding: 0;
     font-family: var(--font-ptsans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-
+    zoom: 90%;
 }
 .heading-container {
     position: relative; /* Ensure relative positioning for absolute child */

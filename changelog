@@ -1,3 +1,10 @@
+v1.7
+ - Added zoom dialog for normal clicks (when you click and hold a dialog with zoom values will appear)
+ - Removed the top bar and made the video window fixed in place.
+ - Disabled number keys from changing cameras when Continous move is switched on
+ - Added new multi-cams and fox thumbnails (credit to Wazix)
+ - Bug fixes
+
 v1.6
 - Added auto cam detection for click and area click
 - Added swap hotkeys
