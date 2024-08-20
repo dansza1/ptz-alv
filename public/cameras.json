@@ -44,7 +44,7 @@
       ]
     },
     {
-      "name": "wolfcorner",
+      "name": "WolfCorner",
       "presets": [
         "back",
         "backfence",
@@ -98,11 +98,14 @@
         "spider2",
         "water",
         "wide",
-        "wolfcam"
+        "wolfcam",
+        "awatmp",
+        "timbertmp",
+        "tmp"
       ]
     },
     {
-      "name": "wolfindoor",
+      "name": "WolfIndoor",
       "presets": [
         "doors",
         "home",
@@ -223,7 +226,7 @@
       ]
     },
     {
-      "name": "Foxcorner",
+      "name": "FoxCorner",
       "presets": [
         "bowl",
         "den",
@@ -297,7 +300,7 @@
       ]
     },
     {
-      "name": "Marmin",
+      "name": "MarmIn",
       "presets": [
         "bowll",
         "bowllc",
@@ -330,7 +333,7 @@
       ]
     },
     {
-      "name": "Marmout",
+      "name": "MarmOut",
       "presets": [
         "below",
         "bottomshelfl",
@@ -416,7 +419,7 @@
       ]
     },
     {
-      "name": "bb",
+      "name": "BB",
       "presets": [
         "a",
         "b",
@@ -446,34 +449,70 @@
       ]
     },
     {
-      "name": "Rat1",
+      "name": "RatT",
       "presets": []
     },
     {
-      "name": "Rat2",
+      "name": "RatM",
       "presets": []
     },
     {
-      "name": "Rat3",
+      "name": "RatB",
       "presets": []
     },
     {
-      "name": "wolfden",
+      "name": "WolfDen",
       "presets": [
         "home",
         "rightcorner"
       ]
     },
     {
-      "name": "wolfden2",
+      "name": "WolfDen2",
       "presets": []
     },
     {
-      "name": "wolfmulti",
+      "name": "WolfMulti",
       "presets": []
     },
     {
-      "name": "wolfmulti2",
+      "name": "WolfWolfIn",
+      "presets": []
+    },
+    {
+      "name": "WolfDenMulti",
+      "presets": []
+    },
+    {
+      "name": "WolfDen2Multi",
+      "presets": []
+    },
+    {
+      "name": "WolfCWolfIn",
+      "presets": []
+    },
+    {
+      "name": "MarmOutMarmIn",
+      "presets": []
+    },
+    {
+      "name": "FoxFoxCorner",
+      "presets": []
+    },
+    {
+      "name": "CrowOutCrowIn",
+      "presets": []
+    },
+    {
+      "name": "CrowInCrowOut",
+      "presets": []
+    },
+    {
+      "name": "HankMulti",
+      "presets": []
+    },
+    {
+      "name": "RatMulti",
       "presets": []
     }
   ]

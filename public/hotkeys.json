@@ -39,7 +39,7 @@
     "belowplatform": "bp",
     "backleftcorner": "blc"
   },
-  "wolfcorner": {
+  "WolfCorner": {
     "back": "b",
     "backfence": "bf",
     "belowplatform": "bp",
@@ -79,7 +79,7 @@
     "water": "w",
     "wolfcam": "wc"
   },
-  "wolfindoor": {
+  "WolfIndoor": {
     "doors": "d",
     "home": "h",
     "humanleft": "hl",
@@ -185,7 +185,7 @@
     "treehousel": "thl",
     "treehouser": "thr"
   },
-  "Foxcorner": {
+  "FoxCorner": {
     "home": "h",
     "insidedoor": "id",
     "table": "ta",
@@ -239,7 +239,7 @@
     "treet": "tt",
     "water": "w"
   },
-  "Marmin": {
+  "MarmIn": {
     "bowll": "bl",
     "bridgecl": "",
     "bridgel": "brl",
@@ -267,7 +267,7 @@
     "winl": "wl",
     "winr": "wr"
   },
-  "Marmout": {
+  "MarmOut": {
     "domel": "dol",
     "domer": "dor",
     "domes": "do",
@@ -305,7 +305,7 @@
     "water": "wa",
     "wide": "w"
   },
-  "wolfden": {
+  "WolfDen": {
     "home": "h",
     "rightcorner": "rc"
   }
