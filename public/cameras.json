@@ -21,7 +21,6 @@
         "den2r",
         "den2t",
         "den2w",
-        "den2wr",
         "down",
         "downright",
         "farcorner",
@@ -40,13 +39,13 @@
         "tip",
         "tipz",
         "waterfall",
-        "wolfcornercam"
+        "wolfcornercam",
+        "den2rw"
       ]
     },
     {
       "name": "WolfCorner",
       "presets": [
-        "back",
         "backfence",
         "belowplatform",
         "belowplatforml",
@@ -54,14 +53,8 @@
         "belowrampl",
         "belowramplz",
         "belowrampr",
-        "belowramprc",
-        "body",
         "brushl",
-        "brushlc",
-        "burm",
-        "burmr",
         "center",
-        "centershade",
         "den1",
         "den2",
         "den2b",
@@ -75,18 +68,13 @@
         "down",
         "downleft",
         "downright",
-        "feed",
-        "funnelspider",
         "grass",
-        "grassc",
         "grassr",
         "home",
         "left",
         "leftcorner",
-        "leftcornerc",
         "leftfence",
         "leftw",
-        "middle",
         "nearcorner",
         "rampl",
         "rampr",
@@ -94,14 +82,8 @@
         "rightcorner",
         "rightfence",
         "river",
-        "spider",
-        "spider2",
         "water",
-        "wide",
-        "wolfcam",
-        "awatmp",
-        "timbertmp",
-        "tmp"
+        "wolfcam"
       ]
     },
     {
